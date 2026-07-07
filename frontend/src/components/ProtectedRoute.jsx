@@ -1,8 +1,10 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ScanAccessDenied from '../views/ScanAccessDenied';
 
-export default function ProtectedRoute({ children, module, action }) {
+export default function ProtectedRoute({ children, module, action, deniedTo = 'dashboard' }) {
   const { user, loading, hasPermission } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -12,9 +14,14 @@ export default function ProtectedRoute({ children, module, action }) {
     );
   }
 
-  if (!user?.token) return <Navigate to="/login" replace />;
+  if (!user?.token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
   if (module && action && !hasPermission(module, action)) {
+    if (deniedTo === 'scan-denied') {
+      return <ScanAccessDenied />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 

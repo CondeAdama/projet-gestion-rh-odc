@@ -38,7 +38,8 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       clearStoredUser();
       if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+        const redirect = window.location.pathname === '/scan' ? '?redirect=/scan' : '';
+        window.location.href = `/login${redirect}`;
       }
     }
     return Promise.reject(err);

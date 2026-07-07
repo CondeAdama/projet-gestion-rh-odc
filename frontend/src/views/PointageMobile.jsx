@@ -8,10 +8,8 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { getApiError } from '../utils/validation';
+import { normaliserMatriculeScan } from '../utils/scan';
 import { useAuth } from '../context/AuthContext';
-
-export default function PointageMobile() {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [localisations, setLocalisations] = useState([]);
@@ -41,10 +39,13 @@ export default function PointageMobile() {
     })();
   }, []);
 
-  const doScan = useCallback(async (matricule) => {
-    const clean = matricule.replace(/\s+/g, '').trim();
+  const doScan = useCallback(async (decoded) => {
+    const clean = normaliserMatriculeScan(decoded);
     if (!clean) {
-      setScanResult({ success: false, message: 'Le matricule est obligatoire.' });
+      setScanResult({
+        success: false,
+        message: 'QR invalide — scannez le badge employé (matricule), pas le QR de transfert mobile.',
+      });
       return;
     }
     if (!selectedLocal) {

@@ -34,7 +34,9 @@ export default function App() {
           <Route path="/reinitialiser-mot-de-passe" element={<ReinitialiserMotDePasse />} />
           <Route path="/inscription" element={<Navigate to="/activer" replace />} />
           <Route path="/scan" element={
-            <ProtectedRoute module="PRESENCES" action="AJOUTER"><PointageMobile /></ProtectedRoute>
+            <ProtectedRoute module="PRESENCES" action="AJOUTER" deniedTo="scan-denied">
+              <PointageMobile />
+            </ProtectedRoute>
           } />
           <Route path="/dashboard" element={
             <ProtectedRoute><Dashboard /></ProtectedRoute>

@@ -9,6 +9,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getApiError } from '../utils/validation';
+import { normaliserMatriculeScan } from '../utils/scan';
 import { Avatar, PageHeader, EmptyState } from '../components/ui/Display';
 import { STATUT_PRESENCE_STYLES } from '../utils/format';
 
@@ -130,10 +131,13 @@ export default function PointageQR() {
 
   const displayedPresences = presenceTab === 'corbeille' ? corbeille : recentPresences;
 
-  const doScan = useCallback(async (matricule) => {
-    const clean = matricule.replace(/\s+/g, '').trim();
+  const doScan = useCallback(async (decoded) => {
+    const clean = normaliserMatriculeScan(decoded);
     if (!clean) {
-      setScanResult({ success: false, message: 'Le matricule est obligatoire.' });
+      setScanResult({
+        success: false,
+        message: 'QR invalide — scannez le badge employé (matricule), pas le QR de transfert mobile.',
+      });
       return;
     }
     if (!selectedLocal) {
@@ -483,7 +487,7 @@ export default function PointageQR() {
                 </button>
               </div>
               <p className="text-sm text-gray-500">
-                Scannez ce QR Code avec votre téléphone pour ouvrir l'interface de pointage mobile.
+                Scannez ce QR avec votre téléphone, connectez-vous (compte Réception, RH ou Admin), puis scannez les badges employés.
               </p>
               <div className="flex justify-center p-4 bg-white rounded-2xl border border-black/10 shadow-sm mx-auto w-fit">
                 <QRCodeSVG value={SCAN_URL} size={200} />
