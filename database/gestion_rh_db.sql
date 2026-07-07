@@ -1,4 +1,4 @@
-﻿/*M!999999\- enable the sandbox mode */ 
+/*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19-12.2.2-MariaDB, for Win64 (AMD64)
 --
 -- Host: localhost    Database: gestion_rh_db
@@ -130,7 +130,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `configuration_entreprise` WRITE;
 /*!40000 ALTER TABLE `configuration_entreprise` DISABLE KEYS */;
 INSERT INTO `configuration_entreprise` VALUES
-(1,'Immeuble Sanana, Kaloum, Commune de Kaloum, Conakry, Guin├⌐e','2026-07-06 18:17:51.816977','GNF','contact@sanana.gn','/uploads/logos/d37a3744-e89e-4dbc-8161-0374b258d30b.png','GN-NIF-2026-B98745','MINERVA GROUP','Identit├⌐ sociale et logistique RH','+224620000000','GN-CNSS-2026-45892',5.00,10.00);
+(1,'Immeuble Sanana, Kaloum, Commune de Kaloum, Conakry, Guinée','2026-07-06 18:17:51.816977','GNF','contact@sanana.gn','/uploads/logos/d37a3744-e89e-4dbc-8161-0374b258d30b.png','GN-NIF-2026-B98745','MINERVA GROUP','Identité sociale et logistique RH','+224620000000','GN-CNSS-2026-45892',5.00,10.00);
 /*!40000 ALTER TABLE `configuration_entreprise` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -176,7 +176,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `configuration_notifications` WRITE;
 /*!40000 ALTER TABLE `configuration_notifications` DISABLE KEYS */;
 INSERT INTO `configuration_notifications` VALUES
-(1,'http://localhost:5173','2026-07-07 14:10:38.312997',0x01,'LIVE',NULL,0x00,NULL,'TWILIO',NULL,0x01,'jeandelano223@gmail.com','MINERVA GROUP','smtp-relay.brevo.com','',587,0x01,'b12de0001@smtp-brevo.com','{\"CONGE_APPROUVE\":{\"emailSujet\":\"Cong├⌐ approuv├⌐ ΓÇö {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, votre demande de cong├⌐ ({{typeConge}}, du {{dateDebut}} au {{dateFin}}) a ├⌐t├⌐ approuv├⌐e.{{commentaireRh}}\",\"smsCorps\":\"Cong├⌐ approuv├⌐ ({{dateDebut}}-{{dateFin}}). {{entreprise}}\"},\"CODE_CONFIRMATION\":{\"emailSujet\":\"Code de confirmation - {{entreprise}}\",\"emailCorps\":\"Votre code de confirmation est : {{code}}. Valide 15 minutes.\",\"smsCorps\":\"Code {{code}} - {{entreprise}}\"},\"LICENCIEMENT\":{\"emailSujet\":\"Notification de licenciement ΓÇö {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, nous vous informons de la fin de votre collaboration avec {{entreprise}}.\",\"smsCorps\":\"Fin de collaboration avec {{entreprise}}. Contactez le RH.\"},\"TEST_SMS\":{\"emailSujet\":\"\",\"emailCorps\":\"\",\"smsCorps\":\"Test SMS {{entreprise}} : votre configuration SMS fonctionne correctement.\"},\"REINITIALISATION_MDP\":{\"emailSujet\":\"R├⌐initialisation de mot de passe - {{entreprise}}\",\"emailCorps\":\"Vous avez demand├⌐ la r├⌐initialisation de votre mot de passe. Code : {{code}} (valide 30 min). R├⌐initialisez ici : {{lien}}\",\"smsCorps\":\"{{entreprise}} : r├⌐initialisation MDP. Code {{code}}. {{lien}}\"},\"SUSPENSION_COMPTE\":{\"emailSujet\":\"Suspension de compte ΓÇö {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, votre compte a ├⌐t├⌐ suspendu. Contactez le service RH pour plus d\'informations.\",\"smsCorps\":\"Compte suspendu chez {{entreprise}}. Contactez le RH.\"},\"ACTIVATION_COMPTE\":{\"emailSujet\":\"Activation de votre compte - {{entreprise}}\",\"emailCorps\":\"Bienvenue chez {{entreprise}} ! Votre code d\'activation : {{code}} (valide 48h). Activez votre compte ici : {{lien}} ΓÇö D├⌐finissez ensuite votre mot de passe.\",\"smsCorps\":\"{{entreprise}} : activez votre compte. Code {{code}}. {{lien}}\"},\"CONGE_REFUSE\":{\"emailSujet\":\"Cong├⌐ refus├⌐ ΓÇö {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, votre demande de cong├⌐ ({{typeConge}}, du {{dateDebut}} au {{dateFin}}) a ├⌐t├⌐ refus├⌐e.{{commentaireRh}}\",\"smsCorps\":\"Cong├⌐ refus├⌐. Contactez le RH ΓÇö {{entreprise}}\"},\"CREATION_CONTRAT\":{\"emailSujet\":\"Nouveau contrat ΓÇö {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, un contrat {{typeContrat}} a ├⌐t├⌐ cr├⌐├⌐ avec un salaire de base de {{salaireBase}} GNF. Date de d├⌐but : {{dateDebut}}.\",\"smsCorps\":\"Nouveau contrat {{typeContrat}} chez {{entreprise}}. D├⌐but : {{dateDebut}}.\"},\"TEST_EMAIL\":{\"emailSujet\":\"Test e-mail - {{entreprise}}\",\"emailCorps\":\"Ceci est un e-mail de test envoy├⌐ depuis la configuration {{entreprise}}. Si vous le recevez, le SMTP est correctement param├⌐tr├⌐.\",\"smsCorps\":\"\"}}',NULL);
+(1,'http://localhost:5173','2026-07-07 14:10:38.312997',0x01,'LIVE',NULL,0x00,NULL,'TWILIO',NULL,0x01,'jeandelano223@gmail.com','MINERVA GROUP','smtp-relay.brevo.com','',587,0x01,'b12de0001@smtp-brevo.com','{\"CONGE_APPROUVE\":{\"emailSujet\":\"Congé approuvé — {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, votre demande de congé ({{typeConge}}, du {{dateDebut}} au {{dateFin}}) a été approuvée.{{commentaireRh}}\",\"smsCorps\":\"Congé approuvé ({{dateDebut}}-{{dateFin}}). {{entreprise}}\"},\"CODE_CONFIRMATION\":{\"emailSujet\":\"Code de confirmation - {{entreprise}}\",\"emailCorps\":\"Votre code de confirmation est : {{code}}. Valide 15 minutes.\",\"smsCorps\":\"Code {{code}} - {{entreprise}}\"},\"LICENCIEMENT\":{\"emailSujet\":\"Notification de licenciement — {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, nous vous informons de la fin de votre collaboration avec {{entreprise}}.\",\"smsCorps\":\"Fin de collaboration avec {{entreprise}}. Contactez le RH.\"},\"TEST_SMS\":{\"emailSujet\":\"\",\"emailCorps\":\"\",\"smsCorps\":\"Test SMS {{entreprise}} : votre configuration SMS fonctionne correctement.\"},\"REINITIALISATION_MDP\":{\"emailSujet\":\"Réinitialisation de mot de passe - {{entreprise}}\",\"emailCorps\":\"Vous avez demandé la réinitialisation de votre mot de passe. Code : {{code}} (valide 30 min). Réinitialisez ici : {{lien}}\",\"smsCorps\":\"{{entreprise}} : réinitialisation MDP. Code {{code}}. {{lien}}\"},\"SUSPENSION_COMPTE\":{\"emailSujet\":\"Suspension de compte — {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, votre compte a été suspendu. Contactez le service RH pour plus d\'informations.\",\"smsCorps\":\"Compte suspendu chez {{entreprise}}. Contactez le RH.\"},\"ACTIVATION_COMPTE\":{\"emailSujet\":\"Activation de votre compte - {{entreprise}}\",\"emailCorps\":\"Bienvenue chez {{entreprise}} ! Votre code d\'activation : {{code}} (valide 48h). Activez votre compte ici : {{lien}} — Définissez ensuite votre mot de passe.\",\"smsCorps\":\"{{entreprise}} : activez votre compte. Code {{code}}. {{lien}}\"},\"CONGE_REFUSE\":{\"emailSujet\":\"Congé refusé — {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, votre demande de congé ({{typeConge}}, du {{dateDebut}} au {{dateFin}}) a été refusée.{{commentaireRh}}\",\"smsCorps\":\"Congé refusé. Contactez le RH — {{entreprise}}\"},\"CREATION_CONTRAT\":{\"emailSujet\":\"Nouveau contrat — {{entreprise}}\",\"emailCorps\":\"Bonjour {{prenom}} {{nom}}, un contrat {{typeContrat}} a été créé avec un salaire de base de {{salaireBase}} GNF. Date de début : {{dateDebut}}.\",\"smsCorps\":\"Nouveau contrat {{typeContrat}} chez {{entreprise}}. Début : {{dateDebut}}.\"},\"TEST_EMAIL\":{\"emailSujet\":\"Test e-mail - {{entreprise}}\",\"emailCorps\":\"Ceci est un e-mail de test envoyé depuis la configuration {{entreprise}}. Si vous le recevez, le SMTP est correctement paramétré.\",\"smsCorps\":\"\"}}',NULL);
 /*!40000 ALTER TABLE `configuration_notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -215,7 +215,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `conges` WRITE;
 /*!40000 ALTER TABLE `conges` DISABLE KEYS */;
 INSERT INTO `conges` VALUES
-(1,'2026-07-06 18:06:00.931076','2026-07-07 14:52:56.465482','ACTIF','Je confirme ton cong├⌐ mais deux jours seulement.','2026-07-07','2026-07-08','','APPROUVE','PAYE',2);
+(1,'2026-07-06 18:06:00.931076','2026-07-07 14:52:56.465482','ACTIF','Je confirme ton congé mais deux jours seulement.','2026-07-07','2026-07-08','','APPROUVE','PAYE',2);
 /*!40000 ALTER TABLE `conges` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -292,7 +292,7 @@ LOCK TABLES `departements` WRITE;
 INSERT INTO `departements` VALUES
 (1,'2026-07-06 15:04:48.369953','2026-07-06 15:04:48.369953','ACTIF','RH',NULL,'Ressources Humaines'),
 (2,'2026-07-06 15:04:48.372952','2026-07-06 15:04:48.372952','ACTIF','IT',NULL,'Technologies de l\'Information'),
-(3,'2026-07-06 18:09:53.203846','2026-07-06 18:09:53.204845','ACTIF','FIN','Comptabilit├⌐','Finance');
+(3,'2026-07-06 18:09:53.203846','2026-07-06 18:09:53.204845','ACTIF','FIN','Comptabilité','Finance');
 /*!40000 ALTER TABLE `departements` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -338,7 +338,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `employes` WRITE;
 /*!40000 ALTER TABLE `employes` DISABLE KEYS */;
 INSERT INTO `employes` VALUES
-(1,'2026-07-06 15:04:48.394319','2026-07-07 14:32:25.987742','ACTIF','2000-06-07','admin@minerva.group','SNG-2026-001','SYST├êME','/uploads/photos/1e5c8f56-ef3b-4e95-9ab8-9676e0ae0fa1.png','Administrateur','+224620758634',1,1,'ACTIF'),
+(1,'2026-07-06 15:04:48.394319','2026-07-07 14:32:25.987742','ACTIF','2000-06-07','admin@minerva.group','SNG-2026-001','SYSTÈME','/uploads/photos/1e5c8f56-ef3b-4e95-9ab8-9676e0ae0fa1.png','Administrateur','+224620758634',1,1,'ACTIF'),
 (2,'2026-07-06 17:33:13.889494','2026-07-06 17:35:59.132081','ACTIF','2003-01-06','diabatekaba198@gmail.com','SNG-2026-002','DIOUBATE','','Kaba','+224629697244',1,2,'ACTIF');
 /*!40000 ALTER TABLE `employes` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -417,8 +417,8 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `localisations` WRITE;
 /*!40000 ALTER TABLE `localisations` DISABLE KEYS */;
 INSERT INTO `localisations` VALUES
-(1,'2026-07-06 15:04:48.377951','2026-07-06 15:04:48.377951','ACTIF','Kaloum, Conakry','SIEGE','Si├¿ge Social','Conakry'),
-(2,'2026-07-06 18:42:55.288498','2026-07-06 18:42:55.288498','ACTIF','Matoto, Conakry','SIEGE2','Si├¿ge Matoto','Conakry');
+(1,'2026-07-06 15:04:48.377951','2026-07-06 15:04:48.377951','ACTIF','Kaloum, Conakry','SIEGE','Siège Social','Conakry'),
+(2,'2026-07-06 18:42:55.288498','2026-07-06 18:42:55.288498','ACTIF','Matoto, Conakry','SIEGE2','Siège Matoto','Conakry');
 /*!40000 ALTER TABLE `localisations` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -453,19 +453,19 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `notifications_log` WRITE;
 /*!40000 ALTER TABLE `notifications_log` DISABLE KEYS */;
 INSERT INTO `notifications_log` VALUES
-(1,'EMAIL','Bonjour Kaba DIOUBATE, un contrat CDI a ├⌐t├⌐ cr├⌐├⌐ avec un salaire de base de 5000000 GNF. Date de d├⌐but : 2026-05-01.','2026-07-06 17:59:15.265661','diabatekaba198@gmail.com',NULL,'ENVOYE','Nouveau contrat ΓÇö SANANA GROUP','CREATION_CONTRAT'),
-(2,'SMS','Bonjour Kaba DIOUBATE, un contrat CDI a ├⌐t├⌐ cr├⌐├⌐ avec un salaire de base de 5000000 GNF. Date de d├⌐but : 2026-05-01.','2026-07-06 17:59:15.290383',NULL,'+224629697244','ENVOYE','Nouveau contrat ΓÇö SANANA GROUP','CREATION_CONTRAT'),
+(1,'EMAIL','Bonjour Kaba DIOUBATE, un contrat CDI a été créé avec un salaire de base de 5000000 GNF. Date de début : 2026-05-01.','2026-07-06 17:59:15.265661','diabatekaba198@gmail.com',NULL,'ENVOYE','Nouveau contrat — SANANA GROUP','CREATION_CONTRAT'),
+(2,'SMS','Bonjour Kaba DIOUBATE, un contrat CDI a été créé avec un salaire de base de 5000000 GNF. Date de début : 2026-05-01.','2026-07-06 17:59:15.290383',NULL,'+224629697244','ENVOYE','Nouveau contrat — SANANA GROUP','CREATION_CONTRAT'),
 (3,'EMAIL','Test configuration','2026-07-07 13:39:38.664089','diabatekaba198@gmail.com',NULL,'ENVOYE','Test e-mail','INSCRIPTION'),
-(4,'EMAIL','Bienvenue chez MINERVA GROUP ! Votre code d\'activation : 869439 (valide 48h). Activez votre compte ici : http://localhost:5173/activer?token=9635dbdc11104c6f998b3cccd361461e&email=diabatekaba198@gmail.com ΓÇö D├⌐finissez ensuite votre mot de passe.','2026-07-07 14:14:25.397603','diabatekaba198@gmail.com',NULL,'ECHEC','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
+(4,'EMAIL','Bienvenue chez MINERVA GROUP ! Votre code d\'activation : 869439 (valide 48h). Activez votre compte ici : http://localhost:5173/activer?token=9635dbdc11104c6f998b3cccd361461e&email=diabatekaba198@gmail.com — Définissez ensuite votre mot de passe.','2026-07-07 14:14:25.397603','diabatekaba198@gmail.com',NULL,'ECHEC','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
 (5,'SMS','MINERVA GROUP : activez votre compte. Code 869439. http://localhost:5173/activer?token=9635dbdc11104c6f998b3cccd361461e&email=diabatekaba198@gmail.com','2026-07-07 14:14:25.405614',NULL,'+224629697244','MOCK','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
-(6,'EMAIL','Bienvenue chez MINERVA GROUP ! Votre code d\'activation : 238148 (valide 48h). Activez votre compte ici : http://localhost:5173/activer?token=a9eb5f9fa3c942568d71d132b3873c2c&email=diabatekaba198@gmail.com ΓÇö D├⌐finissez ensuite votre mot de passe.','2026-07-07 14:15:42.802530','diabatekaba198@gmail.com',NULL,'ENVOYE','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
+(6,'EMAIL','Bienvenue chez MINERVA GROUP ! Votre code d\'activation : 238148 (valide 48h). Activez votre compte ici : http://localhost:5173/activer?token=a9eb5f9fa3c942568d71d132b3873c2c&email=diabatekaba198@gmail.com — Définissez ensuite votre mot de passe.','2026-07-07 14:15:42.802530','diabatekaba198@gmail.com',NULL,'ENVOYE','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
 (7,'SMS','MINERVA GROUP : activez votre compte. Code 238148. http://localhost:5173/activer?token=a9eb5f9fa3c942568d71d132b3873c2c&email=diabatekaba198@gmail.com','2026-07-07 14:15:42.806530',NULL,'+224629697244','MOCK','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
-(8,'EMAIL','Bienvenue chez MINERVA GROUP ! Votre code d\'activation : 945614 (valide 48h). Activez votre compte ici : http://localhost:5173/activer?token=7961676a76144b39aa50854ab7b503ef&email=diabatekaba198@gmail.com ΓÇö D├⌐finissez ensuite votre mot de passe.','2026-07-07 14:15:46.099501','diabatekaba198@gmail.com',NULL,'ENVOYE','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
+(8,'EMAIL','Bienvenue chez MINERVA GROUP ! Votre code d\'activation : 945614 (valide 48h). Activez votre compte ici : http://localhost:5173/activer?token=7961676a76144b39aa50854ab7b503ef&email=diabatekaba198@gmail.com — Définissez ensuite votre mot de passe.','2026-07-07 14:15:46.099501','diabatekaba198@gmail.com',NULL,'ENVOYE','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
 (9,'SMS','MINERVA GROUP : activez votre compte. Code 945614. http://localhost:5173/activer?token=7961676a76144b39aa50854ab7b503ef&email=diabatekaba198@gmail.com','2026-07-07 14:15:46.103476',NULL,'+224629697244','MOCK','Activation de votre compte - MINERVA GROUP','INSCRIPTION'),
-(10,'EMAIL','Bonjour Kaba DIOUBATE, votre demande de cong├⌐ (PAYE, du 2026-07-07 au 2026-07-08) a ├⌐t├⌐ approuv├⌐e. Commentaire RH : Je confirme ton cong├⌐ mais deux jours seulement.','2026-07-07 14:52:56.429063','diabatekaba198@gmail.com',NULL,'ENVOYE','Cong├⌐ approuv├⌐ ΓÇö MINERVA GROUP','VALIDATION_CONGE'),
-(11,'SMS','Cong├⌐ approuv├⌐ (2026-07-07-2026-07-08). MINERVA GROUP','2026-07-07 14:52:56.461504',NULL,'+224629697244','MOCK','Cong├⌐ approuv├⌐ ΓÇö MINERVA GROUP','VALIDATION_CONGE'),
-(12,'EMAIL','Vous avez demand├⌐ la r├⌐initialisation de votre mot de passe. Code : 089041 (valide 30 min). R├⌐initialisez ici : http://localhost:5173/reinitialiser-mot-de-passe?token=46329c5c29d84d4da221cba3ce6461c9&email=diabatekaba198@gmail.com','2026-07-07 16:15:40.825620','diabatekaba198@gmail.com',NULL,'ENVOYE','R├⌐initialisation de mot de passe - MINERVA GROUP','REINITIALISATION'),
-(13,'SMS','MINERVA GROUP : r├⌐initialisation MDP. Code 089041. http://localhost:5173/reinitialiser-mot-de-passe?token=46329c5c29d84d4da221cba3ce6461c9&email=diabatekaba198@gmail.com','2026-07-07 16:15:40.833720',NULL,'+224629697244','MOCK','R├⌐initialisation de mot de passe - MINERVA GROUP','REINITIALISATION');
+(10,'EMAIL','Bonjour Kaba DIOUBATE, votre demande de congé (PAYE, du 2026-07-07 au 2026-07-08) a été approuvée. Commentaire RH : Je confirme ton congé mais deux jours seulement.','2026-07-07 14:52:56.429063','diabatekaba198@gmail.com',NULL,'ENVOYE','Congé approuvé — MINERVA GROUP','VALIDATION_CONGE'),
+(11,'SMS','Congé approuvé (2026-07-07-2026-07-08). MINERVA GROUP','2026-07-07 14:52:56.461504',NULL,'+224629697244','MOCK','Congé approuvé — MINERVA GROUP','VALIDATION_CONGE'),
+(12,'EMAIL','Vous avez demandé la réinitialisation de votre mot de passe. Code : 089041 (valide 30 min). Réinitialisez ici : http://localhost:5173/reinitialiser-mot-de-passe?token=46329c5c29d84d4da221cba3ce6461c9&email=diabatekaba198@gmail.com','2026-07-07 16:15:40.825620','diabatekaba198@gmail.com',NULL,'ENVOYE','Réinitialisation de mot de passe - MINERVA GROUP','REINITIALISATION'),
+(13,'SMS','MINERVA GROUP : réinitialisation MDP. Code 089041. http://localhost:5173/reinitialiser-mot-de-passe?token=46329c5c29d84d4da221cba3ce6461c9&email=diabatekaba198@gmail.com','2026-07-07 16:15:40.833720',NULL,'+224629697244','MOCK','Réinitialisation de mot de passe - MINERVA GROUP','REINITIALISATION');
 /*!40000 ALTER TABLE `notifications_log` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -590,7 +590,7 @@ LOCK TABLES `postes` WRITE;
 /*!40000 ALTER TABLE `postes` DISABLE KEYS */;
 INSERT INTO `postes` VALUES
 (1,'2026-07-06 15:04:48.375952','2026-07-06 15:04:48.375952','ACTIF','DIR-RH',NULL,'Directeur RH',1),
-(2,'2026-07-06 17:35:16.582487','2026-07-06 17:35:16.582487','ACTIF','RECEPT','Gestion des entr├⌐es et sorties.','Receptionniste',NULL);
+(2,'2026-07-06 17:35:16.582487','2026-07-06 17:35:16.582487','ACTIF','RECEPT','Gestion des entrées et sorties.','Receptionniste',NULL);
 /*!40000 ALTER TABLE `postes` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -824,10 +824,10 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `roles` WRITE;
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
 INSERT INTO `roles` VALUES
-(1,'2026-07-06 15:04:48.172537','2026-07-07 14:35:41.812513','ACTIF','ADMINISTRATEUR','Acc├¿s total ├á toutes les fonctionnalit├⌐s','Administrateur Syst├¿me',0x01,0x00),
-(2,'2026-07-06 15:04:48.309831','2026-07-07 14:35:41.861275','ACTIF','RH','Gestion RH compl├¿te','Ressources Humaines',0x01,0x00),
-(3,'2026-07-06 15:04:48.332834','2026-07-07 15:06:38.267762','ACTIF','EMPLOYE','Acc├¿s self-service','Employ├⌐',0x01,0x01),
-(4,'2026-07-06 15:04:48.361952','2026-07-07 14:44:22.380987','ACTIF','RECEPTION','Pointage et visites','R├⌐ception',0x01,0x00),
+(1,'2026-07-06 15:04:48.172537','2026-07-07 14:35:41.812513','ACTIF','ADMINISTRATEUR','Accès total à toutes les fonctionnalités','Administrateur Système',0x01,0x00),
+(2,'2026-07-06 15:04:48.309831','2026-07-07 14:35:41.861275','ACTIF','RH','Gestion RH complète','Ressources Humaines',0x01,0x00),
+(3,'2026-07-06 15:04:48.332834','2026-07-07 15:06:38.267762','ACTIF','EMPLOYE','Accès self-service','Employé',0x01,0x01),
+(4,'2026-07-06 15:04:48.361952','2026-07-07 14:44:22.380987','ACTIF','RECEPTION','Pointage et visites','Réception',0x01,0x00),
 (5,'2026-07-07 10:24:36.537343','2026-07-07 10:24:36.537343','ACTIF','COMTABLE','Gestion des bulletins et cotisations CNSS','Comptable Paie',0x00,0x00);
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -970,7 +970,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `visiteurs` WRITE;
 /*!40000 ALTER TABLE `visiteurs` DISABLE KEYS */;
 INSERT INTO `visiteurs` VALUES
-(1,'+224612561565','2026-07-06 18:22:24.683806','Orange Guin├⌐e','DIALLO','Mamadou','ACTIF');
+(1,'+224612561565','2026-07-06 18:22:24.683806','Orange Guinée','DIALLO','Mamadou','ACTIF');
 /*!40000 ALTER TABLE `visiteurs` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;

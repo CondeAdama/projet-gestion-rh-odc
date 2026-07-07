@@ -54,6 +54,7 @@ public class DataInitializer implements CommandLineRunner {
     private final NotificationModeleService notificationModeleService;
     private final CompteProvisionService compteProvisionService;
     private final PasswordEncoder passwordEncoder;
+    private final ReparationEncodageService reparationEncodageService;
 
     @Value("${minerva.app.url:http://localhost:5173}")
     private String defaultAppUrl;
@@ -90,6 +91,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        executerSecurise("encodage", reparationEncodageService::reparer);
         executerSecurise("permissions", this::synchroniserPermissions);
         executerSecurise("roles", () -> {
             if (roleRepository.count() == 0) {
