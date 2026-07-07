@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -60,13 +61,15 @@ public class CompteProvisionService {
             throw new RegleMetierException("Le rôle Administrateur ne peut pas être attribué via la création d'employé");
         }
         String motDePasseTemporaire = UUID.randomUUID().toString();
+        Set<Role> roles = new HashSet<>();
+        roles.add(role);
         utilisateurRepository.save(Utilisateur.builder()
                 .email(email)
                 .motDePasse(passwordEncoder.encode(motDePasseTemporaire))
                 .employe(employe)
                 .actif(false)
                 .confirme(false)
-                .roles(Set.of(role))
+                .roles(roles)
                 .build());
     }
 

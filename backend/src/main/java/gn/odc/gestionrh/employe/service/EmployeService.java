@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,8 +101,11 @@ public class EmployeService {
         }
         Role role = roleRepository.findByCode(roleCode)
                 .orElseThrow(() -> new RegleMetierException("Rôle introuvable : " + roleCode));
-        utilisateurRepository.findByEmail(employe.getEmail()).ifPresent(u -> {
-            u.setRoles(Set.of(role));
+        utilisateurRepository.findByEmployeId(employe.getId()).ifPresent(u -> {
+            u.setEmail(employe.getEmail());
+            Set<Role> roles = new HashSet<>();
+            roles.add(role);
+            u.setRoles(roles);
             utilisateurRepository.save(u);
         });
     }

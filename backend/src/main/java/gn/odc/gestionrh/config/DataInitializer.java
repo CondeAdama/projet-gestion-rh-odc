@@ -435,13 +435,15 @@ public class DataInitializer implements CommandLineRunner {
         Role roleAdmin = roleRepository.findByCode("ADMINISTRATEUR")
                 .orElseThrow(() -> new IllegalStateException("Rôle ADMINISTRATEUR manquant"));
 
+        Set<Role> rolesAdmin = new HashSet<>();
+        rolesAdmin.add(roleAdmin);
         utilisateurRepository.save(Utilisateur.builder()
                 .email(adminEmail)
                 .motDePasse(passwordEncoder.encode(adminPassword))
                 .employe(adminEmploye)
                 .actif(true)
                 .confirme(true)
-                .roles(Set.of(roleAdmin))
+                .roles(rolesAdmin)
                 .build());
 
         log.info("Administrateur créé : {} / {}", adminEmail, adminPassword);
