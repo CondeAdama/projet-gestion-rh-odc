@@ -382,11 +382,12 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initialiserAdmin() {
-        if (utilisateurRepository.existsByEmail(adminEmail)) return;
-
         migrerAdminLegacy();
 
-        if (utilisateurRepository.existsByEmail(adminEmail)) return;
+        if (utilisateurRepository.existsByEmail(adminEmail)) {
+            synchroniserMotDePasseAdmin();
+            return;
+        }
 
         Departement dept = departementRepository.findByCode("RH").orElse(null);
         Poste poste = posteRepository.findByCode("DIR-RH").orElse(null);
@@ -429,6 +430,17 @@ public class DataInitializer implements CommandLineRunner {
             }
             utilisateurRepository.save(legacy);
             log.info("Administrateur migré de admin@sanana.gn vers {} (mdp: {})", adminEmail, adminPassword);
+        });
+    }
+
+    /** Aligne le mot de passe admin sur odc.admin.password (Render / application-prod). */
+    private void synchroniserMotDePasseAdmin() {
+        utilisateurRepository.findByEmail(adminEmail).ifPresent(admin -> {
+            admin.setMotDePasse(passwordEncoder.encode(adminPassword));
+            admin.setActif(true);
+            admin.setConfirme(true);
+            utilisateurRepository.save(admin);
+            log.info("Compte administrateur synchronisé : {}", adminEmail);
         });
     }
 }
