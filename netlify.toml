@@ -1,0 +1,13 @@
+# Netlify — déploiement frontend MINERVA GROUP
+# Dashboard : New site from Git → projet-gestion-rh-odc
+# Les valeurs ci-dessous sont lues automatiquement si le repo est connecté.
+
+[build]
+  base = "frontend"
+  command = "npm install && npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

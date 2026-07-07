@@ -75,7 +75,8 @@ export default function App() {
               <ProtectedRoute module="CONFIGURATION" action="AFFICHER"><GestionConfiguration /></ProtectedRoute>
             } />
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
       </ConfigProvider>

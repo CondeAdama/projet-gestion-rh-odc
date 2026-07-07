@@ -18,13 +18,33 @@ import java.util.Properties;
 public class ExpediteurEmailService {
 
     private final BrevoSmtpProperties brevoSmtpProperties;
+    private final BrevoApiEmailSender brevoApiEmailSender;
 
     public void envoyer(ConfigurationNotification config, String destinataire, String sujet, String contenu) {
         if (destinataire == null || destinataire.isBlank()) {
             throw new RegleMetierException("Destinataire e-mail manquant");
         }
         ConfigurationNotification cfg = brevoSmtpProperties.appliquer(config);
-        validerIdentifiants(cfg);
+        validerExpediteur(cfg);
+
+        if (brevoSmtpProperties.isUseApi()) {
+            if (!brevoSmtpProperties.preferApi()) {
+                throw new RegleMetierException(
+                        "Clé API Brevo manquante (variable BREVO_API_KEY). "
+                                + "Sur Render, le SMTP est bloqué — créez une clé API dans Brevo → SMTP et API → Clés API.");
+            }
+            brevoApiEmailSender.envoyer(
+                    brevoSmtpProperties.cleApiEffective(),
+                    cfg.getSmtpFromEmail(),
+                    cfg.getSmtpFromName(),
+                    destinataire,
+                    sujet,
+                    contenu
+            );
+            return;
+        }
+
+        validerIdentifiantsSmtp(cfg);
         try {
             JavaMailSenderImpl mailSender = construireMailSender(cfg);
             var message = mailSender.createMimeMessage();
@@ -40,11 +60,11 @@ public class ExpediteurEmailService {
             helper.setSubject(sujet);
             helper.setText(contenu, false);
             mailSender.send(message);
-            log.info("E-mail envoyé à {}", destinataire);
+            log.info("E-mail SMTP envoyé à {}", destinataire);
         } catch (RegleMetierException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Échec envoi e-mail à {} : {}", destinataire, e.getMessage());
+            log.error("Échec envoi e-mail SMTP à {} : {}", destinataire, e.getMessage());
             String msg = e.getMessage() != null ? e.getMessage() : "erreur inconnue";
             if (msg.toLowerCase().contains("authentication")) {
                 throw new RegleMetierException(
@@ -55,15 +75,22 @@ public class ExpediteurEmailService {
         }
     }
 
-    private void validerIdentifiants(ConfigurationNotification cfg) {
+    private void validerExpediteur(ConfigurationNotification cfg) {
+        if (cfg.getSmtpFromEmail() == null || cfg.getSmtpFromEmail().isBlank()) {
+            throw new RegleMetierException("E-mail expéditeur manquant (doit être vérifié dans Brevo)");
+        }
+        if (brevoSmtpProperties.preferApi()) {
+            return;
+        }
+        validerIdentifiantsSmtp(cfg);
+    }
+
+    private void validerIdentifiantsSmtp(ConfigurationNotification cfg) {
         if (cfg.getSmtpUsername() == null || cfg.getSmtpUsername().isBlank()) {
             throw new RegleMetierException("Utilisateur SMTP manquant (login Brevo @smtp-brevo.com)");
         }
         if (cfg.getSmtpPassword() == null || cfg.getSmtpPassword().isBlank()) {
             throw new RegleMetierException("Clé SMTP manquante. Collez la clé Brevo dans Configuration ou application-local.properties");
-        }
-        if (cfg.getSmtpFromEmail() == null || cfg.getSmtpFromEmail().isBlank()) {
-            throw new RegleMetierException("E-mail expéditeur manquant (doit être vérifié dans Brevo)");
         }
     }
 

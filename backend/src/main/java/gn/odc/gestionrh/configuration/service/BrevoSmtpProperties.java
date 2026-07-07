@@ -27,6 +27,13 @@ public class BrevoSmtpProperties {
     @Value("${brevo.smtp.from-name:MINERVA GROUP}")
     private String fromName;
 
+    /** En production (Render), SMTP ports 587/465 sont bloqués — utiliser l'API HTTP Brevo. */
+    @Value("${brevo.use-api:false}")
+    private boolean useApi;
+
+    @Value("${brevo.api-key:}")
+    private String apiKey;
+
     public boolean estConfigure() {
         return login != null && !login.isBlank()
                 && password != null && !password.isBlank();
@@ -52,5 +59,16 @@ public class BrevoSmtpProperties {
             config.setSmtpFromName(fromName.trim());
         }
         return config;
+    }
+
+    public boolean preferApi() {
+        return useApi && cleApiEffective() != null && !cleApiEffective().isBlank();
+    }
+
+    public String cleApiEffective() {
+        if (apiKey != null && !apiKey.isBlank()) {
+            return apiKey.trim();
+        }
+        return null;
     }
 }

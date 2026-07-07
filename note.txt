@@ -1,6 +1,6 @@
 ================================================================================
   MINERVA GROUP — Gestion RH ODC | Documentation Projet
-  Dernière mise à jour : 2026-07-07
+  Dernière mise à jour : 2026-07-07 — production validée (Render + Netlify + Aiven)
 ================================================================================
 
 1. PRÉSENTATION
@@ -15,45 +15,63 @@ Architecture modulaire Spring Boot + React, avec :
   - Export documents (bulletins, badges) : Imprimer, PDF, Image
   - 14 fournisseurs SMS paramétrables (Twilio, Brevo, Termii, HTTP…)
 
-Stack : Spring Boot 3.5 + React 19 + Vite + MariaDB 12+
-API   : http://localhost:8080/api/v2
-Web   : http://localhost:5173
+Stack : Spring Boot 3.5 + React 19 + Vite + MariaDB/MySQL
+
+Local (développement) :
+  API   : http://localhost:8080/api/v2
+  Web   : http://localhost:5173
+
+Production (cloud — gratuit, validé le 2026-07-07) :
+  Frontend Netlify : https://minerva-rh.netlify.app          ← principal
+  Frontend Render  : https://minerva-rh.onrender.com         ← secondaire
+  Backend Render   : https://minerva-rh-api.onrender.com/api/v2
+  Base Aiven MySQL : minerva-mysql-minerva-group.h.aivencloud.com:23766
+  GitHub           : https://github.com/CondeAdama/projet-gestion-rh-odc
 
 2. STRUCTURE DU PROJET
 ----------------------
 projet-gestion-rh-odc/
 ├── note.txt                         ← Ce fichier (documentation de référence)
+├── render.yaml                      ← Blueprint Render (backend + frontend)
+├── netlify.toml                     ← Config build Netlify (base frontend → dist)
 ├── database/
-│   ├── schema.sql                   ← Schéma structure seule (généré depuis la DB)
-│   ├── gestion_rh_db.sql            ← Export complet structure + données (2026-07-07)
-│   └── export.ps1                   ← Script PowerShell pour ré-exporter la DB
-├── backend/                         ← API Spring Boot (port 8080, context /api/v2)
-│   └── src/main/java/gn/odc/gestionrh/
-│       ├── common/                  ← Entités de base, enums, exceptions
-│       ├── auth/                    ← JWT, activation compte, profil, photo
-│       ├── authorization/           ← Rôles, permissions, rôle par défaut
-│       ├── configuration/           ← Entreprise + notifications (SMTP/SMS/modèles)
-│       ├── notification/            ← Envoi e-mail/SMS multi-fournisseurs
-│       ├── referentiel/             ← Postes, départements, localisations
-│       ├── employe/                 ← Employés, matricule, photo, badge
-│       ├── contrat/                 ← Contrats CDI/CDD/STAGE
-│       ├── conge/                   ← Congés + workflow approbation
-│       ├── presence/                ← Pointage QR multi-passages
-│       ├── paie/                    ← Bulletins CNSS/RTS
-│       ├── visite/                  ← Visiteurs, cartes, heures entrée/sortie
-│       ├── rapport/                 ← Synthèse KPI RH
-│       └── config/                  ← DataInitializer (données & permissions)
+│   ├── schema.sql                   ← Schéma structure seule
+│   ├── gestion_rh_db.sql            ← Export complet (sans secrets SMTP)
+│   ├── aiven-minerva-ca.pem         ← Certificat CA Aiven (import CLI)
+│   ├── import-aiven.ps1             ← Script import dump vers Aiven
+│   └── export.ps1                   ← Script ré-export DB locale
+├── backend/
+│   ├── Dockerfile                   ← Build Docker Render
+│   ├── .dockerignore
+│   └── src/main/
+│       ├── java/gn/odc/gestionrh/   ← Code API (modules auth, RH, paie…)
+│       └── resources/
+│           ├── application.properties
+│           ├── application-prod.properties
+│           ├── application-local.properties.example
+│           └── certs/aiven-minerva-ca.pem
 └── frontend/
-    └── src/
-        ├── context/                 ← AuthContext, ConfigContext
-        ├── components/              ← UI, documents (CarteEmploye, export PDF)
-        └── views/                   ← Pages applicatives
+    ├── vercel.json                  ← Config optionnelle Vercel
+    ├── public/_redirects              ← Routing SPA (Netlify / Render)
+    └── src/                           ← Code React (views, components, services)
 
 3. BASE DE DONNÉES
 ------------------
 Nom         : gestion_rh_db
-Moteur      : MariaDB 12+ (localhost:3306)
-Utilisateur : root / root (application.properties — à changer en production)
+
+Local (WAMP / MariaDB) :
+  Moteur      : MariaDB 12+ (localhost:3306)
+  Utilisateur : root / root (application.properties)
+  Profil      : application-local.properties (optionnel, gitignored)
+
+Production (Aiven MySQL — plan Free) :
+  Host        : minerva-mysql-minerva-group.h.aivencloud.com
+  Port        : 23766
+  Base        : gestion_rh_db
+  Utilisateur : avnadmin
+  SSL         : VERIFY_CA (certificat : backend/src/main/resources/certs/aiven-minerva-ca.pem)
+  Profil      : SPRING_PROFILES_ACTIVE=prod (variables d'env sur Render)
+
 DDL auto    : spring.jpa.hibernate.ddl-auto=update
 
 Fichiers :
@@ -61,8 +79,13 @@ Fichiers :
   database/gestion_rh_db.sql  → dump complet avec données actuelles
   database/export.ps1         → régénérer les deux fichiers ci-dessus
 
-Restaurer le dump complet :
+Restaurer le dump complet (local WAMP) :
   mysql -u root -p < database/gestion_rh_db.sql
+
+Import vers Aiven (production) :
+  $env:AIVEN_MYSQL_PASSWORD = "<secret>"
+  powershell -ExecutionPolicy Bypass -File database/import-aiven.ps1
+  (collation MariaDB → utf8mb4_unicode_ci pour MySQL 8.4)
 
 Ré-exporter après modifications :
   powershell -ExecutionPolicy Bypass -File database/export.ps1
@@ -234,18 +257,126 @@ Frontend :
 
 14. CONFIGURATION (application.properties)
 ------------------------------------------
-spring.datasource.url=jdbc:mariadb://localhost:3306/gestion_rh_db
-minerva.app.url=http://localhost:5173
-odc.jwt.secret=<clé-512-bit>
-odc.jwt.expiration=86400000
-odc.admin.email=admin@minerva.group
-odc.admin.password=Admin@2026!
+Local :
+  spring.datasource.url=jdbc:mariadb://localhost:3306/gestion_rh_db
+  minerva.app.url=http://localhost:5173
+
+Production (Render — variables d'environnement minerva-rh-api) :
+  SPRING_PROFILES_ACTIVE=prod
+  AIVEN_DB_PASSWORD=<secret Aiven>
+  JWT_SECRET=<secret généré Render>
+  MINERVA_APP_URL=https://minerva-rh.netlify.app
+  MINERVA_CORS_ORIGINS=https://minerva-rh.onrender.com,https://minerva-rh.netlify.app,http://localhost:5173
+  BREVO_SMTP_LOGIN / BREVO_SMTP_PASSWORD / BREVO_SMTP_FROM (optionnel, dev local)
+  BREVO_API_KEY=<clé API Brevo xkeysib-...>  ← OBLIGATOIRE en prod (Render bloque SMTP)
+
+Frontend Render (minerva-rh) :
+  VITE_API_URL=https://minerva-rh-api.onrender.com/api/v2
+  Root : frontend | Publish : dist
+
+Frontend Netlify (minerva-rh) :
+  VITE_API_URL=https://minerva-rh-api.onrender.com/api/v2
+  Base directory : frontend
+  Publish directory : frontend/dist
+  Build : npm install && npm run build
+
+Commun :
+  odc.jwt.expiration=86400000
+  odc.admin.email=admin@minerva.group
+  odc.admin.password=Admin@2026!
 
 Fichier local optionnel : application-local.properties
-  (identifiants Brevo SMTP, clés API réelles)
+  (identifiants Brevo SMTP, mot de passe Aiven — non versionné)
 
-15. HISTORIQUE DES MODIFICATIONS
+15. HÉBERGEMENT CLOUD (architecture validée)
+-------------------------------------------
+Dépôt GitHub : https://github.com/CondeAdama/projet-gestion-rh-odc
+Branche      : main
+
+Architecture :
+  [Netlify / Render frontend]  →  [Render backend Docker]  →  [Aiven MySQL]
+   minerva-rh.netlify.app          minerva-rh-api.onrender.com   gestion_rh_db
+   minerva-rh.onrender.com         Oregon (US West)              San Francisco
+
+─── BACKEND (Render — Web Service Docker) ───
+  URL publique  : https://minerva-rh-api.onrender.com
+  API base      : https://minerva-rh-api.onrender.com/api/v2
+  Service       : minerva-rh-api
+  Root Directory: backend
+  Runtime       : Docker (Dockerfile)
+  Région        : Oregon (US West) — proche d'Aiven
+  Health check  : /api/v2/configuration
+  Plan          : Free (veille après 15 min, 1re requête ~30-60 s)
+  Console       : https://dashboard.render.com
+
+─── FRONTEND NETLIFY (principal) ───
+  URL           : https://minerva-rh.netlify.app
+  Projet        : minerva-rh
+  Base directory: frontend
+  Publish       : frontend/dist          ← important : pas frontend/ seul
+  Build         : npm install && npm run build
+  Env build     : VITE_API_URL=https://minerva-rh-api.onrender.com/api/v2
+  Console       : https://app.netlify.com
+
+─── FRONTEND RENDER (secondaire) ───
+  URL           : https://minerva-rh.onrender.com
+  Type          : Static Site
+  Root Directory: frontend
+  Publish       : dist
+  Build         : npm install && npm run build
+  Env build     : VITE_API_URL=https://minerva-rh-api.onrender.com/api/v2
+  Plan          : Free (veille après 15 min)
+
+─── BASE DE DONNÉES (Aiven MySQL Free) ───
+  Service       : minerva-mysql
+  Projet Aiven  : minerva-group
+  Host          : minerva-mysql-minerva-group.h.aivencloud.com
+  Port          : 23766
+  Base          : gestion_rh_db
+  Utilisateur   : avnadmin
+  SSL           : VERIFY_CA (certificat dans backend/src/main/resources/certs/)
+  Console       : https://console.aiven.io
+  Import dump   : database/import-aiven.ps1
+
+─── AUTRES HÉBERGEURS FRONTEND (optionnel) ───
+  Vercel        : frontend/ + vercel.json + VITE_API_URL
+  Cloudflare Pages : frontend/ + build Vite + VITE_API_URL
+
+Limitations plan gratuit :
+  - Backend et frontend Render : mise en veille après 15 min d'inactivité
+  - Photos/logos uploadés sur Render : disque éphémère (perdus au redémarrage)
+  - Aiven Free : hibernation DB après inactivité prolongée
+  - SMTP ports 25/465/587 bloqués sur Render Free → envoi via API Brevo (HTTPS, BREVO_API_KEY)
+
+Tests production :
+  GET  https://minerva-rh-api.onrender.com/api/v2/configuration
+  POST https://minerva-rh-api.onrender.com/api/v2/auth/login
+       Body JSON : {"email":"admin@minerva.group","motDePasse":"Admin@2026!"}
+  App  https://minerva-rh.netlify.app/login
+  App  https://minerva-rh.onrender.com
+
+Secrets (ne jamais committer) :
+  - backend/src/main/resources/application-local.properties (gitignored)
+  - AIVEN_DB_PASSWORD, JWT_SECRET, BREVO_* → variables Render uniquement
+  - VITE_API_URL → variables Netlify/Render au moment du build
+
+16. HISTORIQUE DES MODIFICATIONS
 --------------------------------
+[2026-07-07] Production validée — Netlify + Render + Aiven
+  - Connexion admin OK sur https://minerva-rh.netlify.app/dashboard
+  - Fix Netlify : Publish directory = frontend/dist (pas frontend/)
+  - CORS backend : Render + Netlify + localhost
+  - netlify.toml, frontend/vercel.json, import-aiven.ps1
+  - Secrets retirés du dump SQL (push GitHub protégé)
+
+[2026-07-07] Hébergement cloud (Render + Aiven + Netlify)
+  - Frontend Render : https://minerva-rh.onrender.com
+  - Frontend Netlify: https://minerva-rh.netlify.app
+  - Backend Live    : https://minerva-rh-api.onrender.com
+  - Base MySQL Aiven (gestion_rh_db) + SSL
+  - Dockerfile, application-prod.properties, render.yaml
+  - Dépôt GitHub : CondeAdama/projet-gestion-rh-odc
+
 [2026-07-07] Export DB + documentation définitive
   - database/gestion_rh_db.sql : dump complet MariaDB 12.2
   - database/schema.sql régénéré depuis la DB live
