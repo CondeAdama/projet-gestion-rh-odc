@@ -12,4 +12,4 @@ COPY --from=build /app/src/main/resources/certs/aiven-minerva-ca.pem /app/certs/
 ENV AIVEN_SSL_CA=/app/certs/aiven-minerva-ca.pem \
     SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-XX:+UseG1GC", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-XX:+UseSerialGC", "-jar", "app.jar"]

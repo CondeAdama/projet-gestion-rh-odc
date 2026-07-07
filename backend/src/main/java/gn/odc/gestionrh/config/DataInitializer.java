@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.EnumSet;
@@ -86,26 +85,38 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${odc.admin.password}")
     private String adminPassword;
 
+    @Value("${minerva.init.repair-accounts:false}")
+    private boolean repairAccounts;
+
     @Override
-    @Transactional
     public void run(String... args) {
-        synchroniserPermissions();
-        if (roleRepository.count() == 0) {
-            initialiserRoles();
-        } else {
-            synchroniserRolesParDefaut();
+        executerSecurise("permissions", this::synchroniserPermissions);
+        executerSecurise("roles", () -> {
+            if (roleRepository.count() == 0) {
+                initialiserRoles();
+            } else {
+                synchroniserRolesParDefaut();
+            }
+        });
+        executerSecurise("referentiels", this::initialiserReferentiels);
+        executerSecurise("configuration", this::initialiserConfiguration);
+        executerSecurise("notifications", this::initialiserConfigurationNotifications);
+        if (repairAccounts) {
+            executerSecurise("comptes-employes", this::reparerComptesEmployes);
         }
-        initialiserReferentiels();
-        initialiserConfiguration();
-        initialiserConfigurationNotifications();
-        try {
-            reparerComptesEmployes();
-        } catch (Exception e) {
-            log.warn("Réparation comptes employés ignorée : {}", e.getMessage());
-        }
-        initialiserCartesVisite();
-        initialiserAdmin();
+        executerSecurise("cartes-visite", this::initialiserCartesVisite);
+        executerSecurise("admin", this::initialiserAdmin);
         log.info("=== Initialisation données terminée ===");
+    }
+
+    private void executerSecurise(String etape, Runnable action) {
+        try {
+            log.info("Initialisation : {}...", etape);
+            action.run();
+            log.info("Initialisation : {} terminée", etape);
+        } catch (Exception e) {
+            log.error("Initialisation : {} échouée (non bloquant) : {}", etape, e.getMessage(), e);
+        }
     }
 
     private void synchroniserPermissions() {
@@ -379,6 +390,9 @@ public class DataInitializer implements CommandLineRunner {
 
     private void reparerComptesEmployes() {
         employeRepository.findByStatut(StatutEntite.ACTIF).forEach(employe -> {
+            if (employe.getEmail() == null || employe.getEmail().isBlank()) {
+                return;
+            }
             if (!utilisateurRepository.existsByEmail(employe.getEmail())) {
                 compteProvisionService.assurerCompteEmploye(employe, "EMPLOYE");
                 log.info("Compte utilisateur créé pour {} — renvoyez l'activation depuis la fiche employé", employe.getEmail());
