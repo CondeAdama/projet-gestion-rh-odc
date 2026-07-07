@@ -77,6 +77,9 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${brevo.smtp.from-name:MINERVA GROUP}")
     private String brevoFromName;
 
+    @Value("${brevo.api-key:}")
+    private String brevoApiKey;
+
     @Value("${odc.admin.email}")
     private String adminEmail;
 
@@ -95,7 +98,11 @@ public class DataInitializer implements CommandLineRunner {
         initialiserReferentiels();
         initialiserConfiguration();
         initialiserConfigurationNotifications();
-        reparerComptesEmployes();
+        try {
+            reparerComptesEmployes();
+        } catch (Exception e) {
+            log.warn("Réparation comptes employés ignorée : {}", e.getMessage());
+        }
         initialiserCartesVisite();
         initialiserAdmin();
         log.info("=== Initialisation données terminée ===");
@@ -333,14 +340,22 @@ public class DataInitializer implements CommandLineRunner {
         config.setAppUrl(defaultAppUrl);
         config.setSmsProvider("TWILIO");
 
-        if (brevoSmtpPassword != null && !brevoSmtpPassword.isBlank()) {
+        boolean brevoActif = (brevoApiKey != null && !brevoApiKey.isBlank())
+                || (brevoSmtpPassword != null && !brevoSmtpPassword.isBlank());
+        if (brevoActif) {
             config.setModeEnvoi("LIVE");
             config.setEmailActif(true);
             config.setSmtpHost(brevoSmtpHost);
             config.setSmtpPort(brevoSmtpPort);
-            config.setSmtpUsername(brevoSmtpLogin.trim());
-            config.setSmtpPassword(brevoSmtpPassword.trim());
-            config.setSmtpFromEmail(brevoFromEmail.trim());
+            if (brevoSmtpLogin != null && !brevoSmtpLogin.isBlank()) {
+                config.setSmtpUsername(brevoSmtpLogin.trim());
+            }
+            if (brevoSmtpPassword != null && !brevoSmtpPassword.isBlank()) {
+                config.setSmtpPassword(brevoSmtpPassword.trim());
+            }
+            if (brevoFromEmail != null && !brevoFromEmail.isBlank()) {
+                config.setSmtpFromEmail(brevoFromEmail.trim());
+            }
             config.setSmtpFromName(brevoFromName);
             config.setSmtpAuth(true);
             config.setSmtpStarttls(true);

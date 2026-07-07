@@ -35,8 +35,9 @@ public class BrevoSmtpProperties {
     private String apiKey;
 
     public boolean estConfigure() {
-        return login != null && !login.isBlank()
-                && password != null && !password.isBlank();
+        return (login != null && !login.isBlank()
+                && password != null && !password.isBlank())
+                || (useApi && cleApiEffective() != null && !cleApiEffective().isBlank());
     }
 
     /** Priorité aux identifiants du fichier local (application-local.properties). */
