@@ -58,3 +58,20 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+
+/* Pointage mobile — flux vidéo caméra */
+#mobile-qr-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 1.5rem;
+}
+
+#mobile-qr-reader {
+  min-height: 280px;
+}
+
+#mobile-qr-reader img[alt="Info icon"],
+#mobile-qr-reader button {
+  display: none !important;
+}

@@ -1,16 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Scan, MapPin, RefreshCw, CheckCircle2, AlertCircle, Camera,
   Keyboard, LogOut, ArrowLeft
 } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { getApiError } from '../utils/validation';
 import { normaliserMatriculeScan } from '../utils/scan';
 import { useAuth } from '../context/AuthContext';
+
+const READER_ID = 'mobile-qr-reader';
+
+export default function PointageMobile() {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const scannerRef = useRef(null);
+  const scanningLockRef = useRef(false);
 
   const [localisations, setLocalisations] = useState([]);
   const [selectedLocal, setSelectedLocal] = useState('');
@@ -18,6 +25,8 @@ import { useAuth } from '../context/AuthContext';
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [cameraMode, setCameraMode] = useState(true);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
   const [recentCount, setRecentCount] = useState(0);
   const [loadError, setLoadError] = useState(null);
 
@@ -73,21 +82,84 @@ import { useAuth } from '../context/AuthContext';
     }
   }, [selectedLocal]);
 
+  const stopCamera = useCallback(async () => {
+    const scanner = scannerRef.current;
+    scannerRef.current = null;
+    setCameraActive(false);
+    if (!scanner) return;
+    try {
+      if (scanner.isScanning) {
+        await scanner.stop();
+      }
+      scanner.clear();
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    setCameraError(null);
+    await stopCamera();
+
+    const onSuccess = async (decoded) => {
+      if (scanningLockRef.current) return;
+      scanningLockRef.current = true;
+      await doScan(decoded);
+      scanningLockRef.current = false;
+    };
+
+    try {
+      const scanner = new Html5Qrcode(READER_ID);
+      scannerRef.current = scanner;
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 260, height: 260 },
+        aspectRatio: 1,
+      };
+
+      try {
+        await scanner.start(
+          { facingMode: 'environment' },
+          config,
+          onSuccess,
+          () => {}
+        );
+      } catch {
+        await scanner.start(
+          { facingMode: 'user' },
+          config,
+          onSuccess,
+          () => {}
+        );
+      }
+
+      setCameraActive(true);
+    } catch (err) {
+      const msg = err?.message || String(err);
+      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('notallowed')) {
+        setCameraError('Autorisez l\'accès à la caméra dans les paramètres du navigateur, puis réessayez.');
+      } else {
+        setCameraError(`Caméra indisponible : ${msg}`);
+      }
+      setCameraActive(false);
+    }
+  }, [doScan, stopCamera]);
+
   useEffect(() => {
-    if (!cameraMode) return;
-    const scanner = new Html5QrcodeScanner('mobile-reader', {
-      qrbox: { width: 280, height: 280 },
-      fps: 10,
-      aspectRatio: 1,
-    });
-    scanner.render(
-      (decoded) => { scanner.clear().catch(() => {}); doScan(decoded); },
-      () => {}
-    );
-    return () => { scanner.clear().catch(() => {}); };
-  }, [cameraMode, doScan]);
+    if (!cameraMode) {
+      stopCamera();
+      return;
+    }
+    const timer = setTimeout(() => startCamera(), 300);
+    return () => {
+      clearTimeout(timer);
+      stopCamera();
+    };
+  }, [cameraMode, startCamera, stopCamera]);
 
   const handleLogout = () => {
+    stopCamera();
     logout();
     navigate('/login');
   };
@@ -95,14 +167,14 @@ import { useAuth } from '../context/AuthContext';
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-white flex flex-col">
       <header className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/40 backdrop-blur-lg sticky top-0 z-10">
-        <button onClick={() => navigate('/dashboard/pointage')} className="p-2 rounded-xl hover:bg-white/10">
+        <button type="button" onClick={() => navigate('/dashboard/pointage')} className="p-2 rounded-xl hover:bg-white/10">
           <ArrowLeft size={20} />
         </button>
         <div className="text-center">
           <h1 className="text-sm font-bold tracking-wide">POINTAGE MOBILE</h1>
           <p className="text-[10px] text-white/50">MINERVA GROUP</p>
         </div>
-        <button onClick={handleLogout} className="p-2 rounded-xl hover:bg-white/10">
+        <button type="button" onClick={handleLogout} className="p-2 rounded-xl hover:bg-white/10">
           <LogOut size={18} />
         </button>
       </header>
@@ -123,15 +195,30 @@ import { useAuth } from '../context/AuthContext';
             ))}
           </select>
         )}
-        <button onClick={() => setCameraMode(m => !m)} className="p-2.5 bg-white/10 rounded-xl">
+        <button type="button" onClick={() => setCameraMode(m => !m)} className="p-2.5 bg-white/10 rounded-xl">
           <Camera size={18} className={cameraMode ? 'text-emerald-400' : 'text-white/40'} />
         </button>
       </div>
 
       <div className="flex-1 flex flex-col px-4 pb-6 gap-4">
         {cameraMode ? (
-          <div className="flex-1 min-h-[320px] bg-black rounded-3xl overflow-hidden border border-white/10 relative">
-            <div id="mobile-reader" className="w-full h-full" />
+          <div className="flex-1 min-h-[320px] bg-black rounded-3xl overflow-hidden border border-white/10 relative flex flex-col">
+            <div id={READER_ID} className="w-full flex-1 min-h-[280px]" />
+            {!cameraActive && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 bg-black/80 text-center">
+                <Camera size={40} className="text-white/40" />
+                <p className="text-sm text-white/70">
+                  {cameraError || 'Appuyez pour activer la caméra et scanner les badges.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="px-6 py-3 bg-blue-600 rounded-xl text-sm font-semibold"
+                >
+                  Autoriser la caméra
+                </button>
+              </div>
+            )}
             <div className="absolute bottom-3 left-0 right-0 text-center pointer-events-none">
               <span className="text-[10px] text-white/40 bg-black/60 px-3 py-1 rounded-full">
                 Placez le badge dans le cadre
@@ -142,6 +229,7 @@ import { useAuth } from '../context/AuthContext';
           <div className="flex-1 min-h-[200px] bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl flex flex-col items-center justify-center border border-white/10 gap-4">
             <Scan size={48} className="text-white/30" />
             <button
+              type="button"
               onClick={() => setCameraMode(true)}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 rounded-xl text-sm font-semibold"
             >
@@ -165,6 +253,7 @@ import { useAuth } from '../context/AuthContext';
             required
             minLength={3}
             maxLength={50}
+            autoComplete="off"
             className="w-full px-4 py-3.5 bg-white/10 border border-white/10 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-blue-500/50"
           />
           <button
@@ -196,7 +285,7 @@ import { useAuth } from '../context/AuthContext';
         </AnimatePresence>
 
         <div className="text-center text-xs text-white/30 pt-2">
-          {recentCount} pointage{recentCount !== 1 ? 's' : ''} aujourd'hui · {user?.nomComplet || user?.email}
+          {recentCount} pointage{recentCount !== 1 ? 's' : ''} aujourd&apos;hui · {user?.nomComplet || user?.email}
         </div>
       </div>
     </div>
