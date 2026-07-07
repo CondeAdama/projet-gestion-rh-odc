@@ -1,50 +1,82 @@
--- Réparation manuelle du mojibake UTF-8 (import MariaDB → MySQL / double encodage)
+-- Réparation manuelle des données texte corrompues (mojibake UTF-8 + perte d'accents « ?? »)
 -- Usage : mysql -h <host> -P <port> -u <user> -p gestion_rh_db < database/fix-encoding-utf8.sql
 
 SET NAMES utf8mb4;
 
--- roles
+-- ---------------------------------------------------------------------------
+-- 1. Rôles système (corruption « ?? » — valeurs exactes depuis DataInitializer)
+-- ---------------------------------------------------------------------------
+UPDATE roles SET libelle = 'Administrateur Système', description = 'Accès total à toutes les fonctionnalités'
+WHERE code = 'ADMINISTRATEUR' AND (libelle LIKE '%??%' OR libelle LIKE '%├%' OR libelle LIKE '%Ã%');
+
+UPDATE roles SET libelle = 'Employé', description = 'Accès self-service'
+WHERE code = 'EMPLOYE' AND (libelle LIKE '%??%' OR libelle LIKE '%├%' OR libelle LIKE '%Ã%');
+
+UPDATE roles SET libelle = 'Réception', description = 'Pointage, visites et self-service employé'
+WHERE code = 'RECEPTION' AND (libelle LIKE '%??%' OR libelle LIKE '%├%' OR libelle LIKE '%Ã%');
+
+-- ---------------------------------------------------------------------------
+-- 2. Remplacements génériques « ?? » (perte d'accents à l'import)
+-- ---------------------------------------------------------------------------
+UPDATE roles SET libelle = REPLACE(libelle, 'Syst??me', 'Système') WHERE libelle LIKE '%Syst??me%';
+UPDATE roles SET libelle = REPLACE(libelle, 'R??ception', 'Réception') WHERE libelle LIKE '%R??ception%';
+UPDATE roles SET libelle = REPLACE(libelle, 'Employ??', 'Employé') WHERE libelle LIKE '%Employ??%';
+
+UPDATE departements SET libelle = REPLACE(libelle, 'Op??rations', 'Opérations') WHERE libelle LIKE '%Op??rations%';
+UPDATE departements SET description = REPLACE(description, 'D??veloppement', 'Développement') WHERE description LIKE '%D??veloppement%';
+UPDATE departements SET description = REPLACE(description, 'Comptabilit??', 'Comptabilité') WHERE description LIKE '%Comptabilit??%';
+UPDATE departements SET description = REPLACE(description, 'd??clarations', 'déclarations') WHERE description LIKE '%d??clarations%';
+
+UPDATE postes SET libelle = REPLACE(libelle, 'D??veloppeur', 'Développeur') WHERE libelle LIKE '%D??veloppeur%';
+UPDATE postes SET libelle = REPLACE(libelle, 'Op??rations', 'Opérations') WHERE libelle LIKE '%Op??rations%';
+UPDATE postes SET description = REPLACE(description, 'd??veloppement', 'développement') WHERE description LIKE '%d??veloppement%';
+UPDATE postes SET description = REPLACE(description, 'd??clarations', 'déclarations') WHERE description LIKE '%d??clarations%';
+
+UPDATE localisations SET nom = REPLACE(nom, 'Si??ge', 'Siège') WHERE nom LIKE '%Si??ge%';
+UPDATE localisations SET nom = REPLACE(nom, 'Entrep??t', 'Entrepôt') WHERE nom LIKE '%Entrep??t%';
+
+-- Employé admin (nom sans accent)
+UPDATE employes SET nom = 'Système'
+WHERE (nom = 'SYSTEME' OR nom LIKE '%??%')
+  AND (matricule = 'ADM-001' OR matricule LIKE 'SNG-%' OR email = 'admin@minerva.group');
+
+-- ---------------------------------------------------------------------------
+-- 3. Mojibake UTF-8 (import MariaDB → MySQL / double encodage)
+-- ---------------------------------------------------------------------------
 UPDATE roles SET libelle = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(libelle, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE libelle LIKE '%├%' OR libelle LIKE '%Ã%' OR libelle LIKE '%ΓÇ%' OR libelle LIKE '%â€%';
 UPDATE roles SET description = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(description, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE description LIKE '%├%' OR description LIKE '%Ã%' OR description LIKE '%ΓÇ%' OR description LIKE '%â€%';
 
--- departements
 UPDATE departements SET libelle = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(libelle, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE libelle LIKE '%├%' OR libelle LIKE '%Ã%' OR libelle LIKE '%ΓÇ%' OR libelle LIKE '%â€%';
 UPDATE departements SET description = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(description, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE description LIKE '%├%' OR description LIKE '%Ã%' OR description LIKE '%ΓÇ%' OR description LIKE '%â€%';
 
--- postes
 UPDATE postes SET libelle = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(libelle, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE libelle LIKE '%├%' OR libelle LIKE '%Ã%' OR libelle LIKE '%ΓÇ%' OR libelle LIKE '%â€%';
 UPDATE postes SET description = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(description, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE description LIKE '%├%' OR description LIKE '%Ã%' OR description LIKE '%ΓÇ%' OR description LIKE '%â€%';
 
--- localisations
 UPDATE localisations SET nom = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nom, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE nom LIKE '%├%' OR nom LIKE '%Ã%' OR nom LIKE '%ΓÇ%' OR nom LIKE '%â€%';
 UPDATE localisations SET adresse = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(adresse, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE adresse LIKE '%├%' OR adresse LIKE '%Ã%' OR adresse LIKE '%ΓÇ%' OR adresse LIKE '%â€%';
 UPDATE localisations SET ville = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(ville, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE ville LIKE '%├%' OR ville LIKE '%Ã%' OR ville LIKE '%ΓÇ%' OR ville LIKE '%â€%';
 
--- employes
 UPDATE employes SET nom = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nom, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE nom LIKE '%├%' OR nom LIKE '%Ã%' OR nom LIKE '%ΓÇ%' OR nom LIKE '%â€%';
 UPDATE employes SET prenom = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(prenom, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE prenom LIKE '%├%' OR prenom LIKE '%Ã%' OR prenom LIKE '%ΓÇ%' OR prenom LIKE '%â€%';
 
--- configuration_entreprise
 UPDATE configuration_entreprise SET adresse = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(adresse, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE adresse LIKE '%├%' OR adresse LIKE '%Ã%' OR adresse LIKE '%ΓÇ%' OR adresse LIKE '%â€%';
 UPDATE configuration_entreprise SET slogan = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(slogan, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE slogan LIKE '%├%' OR slogan LIKE '%Ã%' OR slogan LIKE '%ΓÇ%' OR slogan LIKE '%â€%';
 UPDATE configuration_entreprise SET nom_entreprise = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nom_entreprise, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE nom_entreprise LIKE '%├%' OR nom_entreprise LIKE '%Ã%' OR nom_entreprise LIKE '%ΓÇ%' OR nom_entreprise LIKE '%â€%';
 
--- conges
 UPDATE conges SET commentaire_rh = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(commentaire_rh, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE commentaire_rh LIKE '%├%' OR commentaire_rh LIKE '%Ã%' OR commentaire_rh LIKE '%ΓÇ%' OR commentaire_rh LIKE '%â€%';
 
--- notifications_log
 UPDATE notifications_log SET sujet = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(sujet, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE sujet LIKE '%├%' OR sujet LIKE '%Ã%' OR sujet LIKE '%ΓÇ%' OR sujet LIKE '%â€%';
 UPDATE notifications_log SET contenu = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(contenu, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE contenu LIKE '%├%' OR contenu LIKE '%Ã%' OR contenu LIKE '%ΓÇ%' OR contenu LIKE '%â€%';
 
--- visiteurs
 UPDATE visiteurs SET societe = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(societe, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE societe LIKE '%├%' OR societe LIKE '%Ã%' OR societe LIKE '%ΓÇ%' OR societe LIKE '%â€%';
 
--- configuration_notifications (modèles JSON)
 UPDATE configuration_notifications SET modeles_messages = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(modeles_messages, '├⌐', 'é'), '├¿', 'è'), '├á', 'à'), '├â', 'â'), '├ê', 'È'), '├ë', 'É'), '├®', 'é'), '├º', 'ç'), '├»', 'ï'), 'ΓÇö', '—'), 'ΓÇÖ', ''''), 'ΓÇ£', '"'), 'ΓÇ¥', '"'), 'Ã©', 'é'), 'Ã¨', 'è'), 'Ã ', 'à'), 'Ã¢', 'â'), 'Ã§', 'ç'), 'Ã®', 'î'), 'Ã´', 'ô'), 'Ã»', 'û'), 'Ã«', 'ë'), 'Ã‰', 'É'), 'Ãˆ', 'È'), 'ÃŠ', 'Ê'), 'â€™', ''''), 'â€"', '—'), 'â€œ', '"') WHERE modeles_messages LIKE '%├%' OR modeles_messages LIKE '%Ã%' OR modeles_messages LIKE '%ΓÇ%' OR modeles_messages LIKE '%â€%';
 
+-- ---------------------------------------------------------------------------
 -- Vérification (doit retourner 0 ligne si tout est corrigé)
-SELECT 'roles' AS table_name, id, libelle FROM roles WHERE libelle LIKE '%├%' OR libelle LIKE '%Ã%' OR libelle LIKE '%ΓÇ%' OR libelle LIKE '%â€%'
+-- ---------------------------------------------------------------------------
+SELECT 'roles' AS table_name, id, libelle FROM roles WHERE libelle LIKE '%??%' OR libelle LIKE '%├%' OR libelle LIKE '%Ã%'
 UNION ALL
-SELECT 'localisations', id, nom FROM localisations WHERE nom LIKE '%├%' OR nom LIKE '%Ã%' OR nom LIKE '%ΓÇ%' OR nom LIKE '%â€%'
+SELECT 'localisations', id, nom FROM localisations WHERE nom LIKE '%??%' OR nom LIKE '%├%' OR nom LIKE '%Ã%'
 UNION ALL
-SELECT 'employes', id, nom FROM employes WHERE nom LIKE '%├%' OR nom LIKE '%Ã%' OR nom LIKE '%ΓÇ%' OR nom LIKE '%â€%';
+SELECT 'employes', id, nom FROM employes WHERE nom LIKE '%??%' OR nom = 'SYSTEME' OR nom LIKE '%├%' OR nom LIKE '%Ã%';
