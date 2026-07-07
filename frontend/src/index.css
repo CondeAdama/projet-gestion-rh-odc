@@ -59,18 +59,40 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
 
-/* Pointage mobile — flux vidéo caméra */
+/* Pointage mobile — un seul flux vidéo */
+.mobile-qr-reader,
+#mobile-qr-reader {
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.mobile-qr-reader video,
 #mobile-qr-reader video {
   width: 100% !important;
   height: 100% !important;
+  max-height: 360px !important;
   object-fit: cover !important;
   border-radius: 1.5rem;
+  transform: scaleX(1) !important;
 }
 
-#mobile-qr-reader {
-  min-height: 280px;
+/* Évite le double affichage si plusieurs éléments vidéo */
+.mobile-qr-reader video ~ video,
+#mobile-qr-reader video ~ video,
+.mobile-qr-reader canvas ~ canvas,
+#mobile-qr-reader canvas ~ canvas {
+  display: none !important;
 }
 
+.mobile-qr-reader > div,
+#mobile-qr-reader > div {
+  border: none !important;
+  padding: 0 !important;
+}
+
+.mobile-qr-reader img[alt="Info icon"],
+.mobile-qr-reader button,
 #mobile-qr-reader img[alt="Info icon"],
 #mobile-qr-reader button {
   display: none !important;
