@@ -1,0 +1,14 @@
+# Copiez ce fichier en application-local.properties et renseignez vos identifiants
+
+# Brevo SMTP
+brevo.smtp.login=votre-login@smtp-brevo.com
+brevo.smtp.password=votre-cle-smtp-brevo
+brevo.smtp.from-email=votre-email-verifie@example.com
+brevo.smtp.from-name=MINERVA GROUP
+
+# Aiven MySQL (minerva-mysql)
+# Certificat CA : backend/src/main/resources/certs/aiven-minerva-ca.pem
+aiven.ssl-ca=${user.dir}/src/main/resources/certs/aiven-minerva-ca.pem
+spring.datasource.url=jdbc:mariadb://minerva-mysql-minerva-group.h.aivencloud.com:23766/gestion_rh_db?sslMode=VERIFY_CA&serverSslCert=${aiven.ssl-ca}
+spring.datasource.username=avnadmin
+spring.datasource.password=VOTRE_MOT_DE_PASSE_AIVEN

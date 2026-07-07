@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --minerva-bg: #F5F5F7;
+  --minerva-surface: rgba(255, 255, 255, 0.72);
+  --minerva-text: #1D1D1F;
+  --minerva-muted: #86868B;
+  --minerva-accent: #0071E3;
+  --minerva-accent-dark: #1e3a5f;
+  --minerva-radius: 1rem;
+  --minerva-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  background: var(--minerva-bg);
+  color: var(--minerva-text);
+  letter-spacing: -0.01em;
+}
+
+/* Glass card utility */
+.glass-card {
+  background: var(--minerva-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--minerva-radius);
+  box-shadow: var(--minerva-shadow);
+}
+
+/* Apple-style focus ring */
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.25);
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: fadeUp 0.35s ease-out;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }

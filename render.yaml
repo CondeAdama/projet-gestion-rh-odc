@@ -1,0 +1,48 @@
+# Blueprint Render — MINERVA GROUP
+# Dashboard : New > Blueprint > connecter le dépôt GitHub
+
+services:
+  - type: web
+    name: minerva-rh-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /api/v2/configuration
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: AIVEN_DB_HOST
+        value: minerva-mysql-minerva-group.h.aivencloud.com
+      - key: AIVEN_DB_PORT
+        value: "23766"
+      - key: AIVEN_DB_NAME
+        value: gestion_rh_db
+      - key: AIVEN_DB_USER
+        value: avnadmin
+      - key: AIVEN_DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MINERVA_APP_URL
+        value: https://minerva-rh.onrender.com
+      - key: MINERVA_CORS_ORIGINS
+        value: https://minerva-rh.onrender.com,http://localhost:5173
+      - key: BREVO_SMTP_LOGIN
+        sync: false
+      - key: BREVO_SMTP_PASSWORD
+        sync: false
+      - key: BREVO_SMTP_FROM
+        sync: false
+
+  - type: web
+    name: minerva-rh
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        value: https://minerva-rh-api.onrender.com/api/v2

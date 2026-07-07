@@ -1,0 +1,285 @@
+================================================================================
+  MINERVA GROUP — Gestion RH ODC | Documentation Projet
+  Dernière mise à jour : 2026-07-07
+================================================================================
+
+1. PRÉSENTATION
+---------------
+Application de Gestion des Ressources Humaines (MINERVA GROUP / ODC).
+Architecture modulaire Spring Boot + React, avec :
+  - Autorisation granulaire par module et action (dont AFFICHER_AUTRUI)
+  - Suppression logique à deux étapes (corbeille + restauration)
+  - Notifications e-mail / SMS configurables depuis l'interface
+  - Modèles de messages éditables (activation, congés, paie, tests…)
+  - Pointage multi-passages (entrées/sorties/ré-entrées illimitées par jour)
+  - Export documents (bulletins, badges) : Imprimer, PDF, Image
+  - 14 fournisseurs SMS paramétrables (Twilio, Brevo, Termii, HTTP…)
+
+Stack : Spring Boot 3.5 + React 19 + Vite + MariaDB 12+
+API   : http://localhost:8080/api/v2
+Web   : http://localhost:5173
+
+2. STRUCTURE DU PROJET
+----------------------
+projet-gestion-rh-odc/
+├── note.txt                         ← Ce fichier (documentation de référence)
+├── database/
+│   ├── schema.sql                   ← Schéma structure seule (généré depuis la DB)
+│   ├── gestion_rh_db.sql            ← Export complet structure + données (2026-07-07)
+│   └── export.ps1                   ← Script PowerShell pour ré-exporter la DB
+├── backend/                         ← API Spring Boot (port 8080, context /api/v2)
+│   └── src/main/java/gn/odc/gestionrh/
+│       ├── common/                  ← Entités de base, enums, exceptions
+│       ├── auth/                    ← JWT, activation compte, profil, photo
+│       ├── authorization/           ← Rôles, permissions, rôle par défaut
+│       ├── configuration/           ← Entreprise + notifications (SMTP/SMS/modèles)
+│       ├── notification/            ← Envoi e-mail/SMS multi-fournisseurs
+│       ├── referentiel/             ← Postes, départements, localisations
+│       ├── employe/                 ← Employés, matricule, photo, badge
+│       ├── contrat/                 ← Contrats CDI/CDD/STAGE
+│       ├── conge/                   ← Congés + workflow approbation
+│       ├── presence/                ← Pointage QR multi-passages
+│       ├── paie/                    ← Bulletins CNSS/RTS
+│       ├── visite/                  ← Visiteurs, cartes, heures entrée/sortie
+│       ├── rapport/                 ← Synthèse KPI RH
+│       └── config/                  ← DataInitializer (données & permissions)
+└── frontend/
+    └── src/
+        ├── context/                 ← AuthContext, ConfigContext
+        ├── components/              ← UI, documents (CarteEmploye, export PDF)
+        └── views/                   ← Pages applicatives
+
+3. BASE DE DONNÉES
+------------------
+Nom         : gestion_rh_db
+Moteur      : MariaDB 12+ (localhost:3306)
+Utilisateur : root / root (application.properties — à changer en production)
+DDL auto    : spring.jpa.hibernate.ddl-auto=update
+
+Fichiers :
+  database/schema.sql         → structure uniquement (restauration schéma)
+  database/gestion_rh_db.sql  → dump complet avec données actuelles
+  database/export.ps1         → régénérer les deux fichiers ci-dessus
+
+Restaurer le dump complet :
+  mysql -u root -p < database/gestion_rh_db.sql
+
+Ré-exporter après modifications :
+  powershell -ExecutionPolicy Bypass -File database/export.ps1
+
+Tables (21) :
+  departements, postes, localisations
+  employes, utilisateurs, utilisateur_roles, codes_confirmation
+  roles, permissions, role_permissions
+  contrats, conges, presences, fiches_paie
+  visiteurs, cartes_visite, visites
+  configuration_entreprise, configuration_notifications
+  notifications_log
+
+Colonnes notables ajoutées depuis la v1 :
+  - roles.par_defaut              → rôle attribué par défaut aux nouveaux employés
+  - employes.statut_emploi        → ACTIF | SUSPENDU | LICENCIE
+  - presences.statut_presence     → EN_REGLE | RETARD | REFUSE (+ statut soft delete)
+  - configuration_notifications   → SMTP, SMS (14 fournisseurs), sms_extra_config JSON, modèles
+
+4. COMPTE ADMINISTRATEUR
+------------------------
+Créé / migré automatiquement au démarrage (DataInitializer) :
+
+  E-mail       : admin@minerva.group
+  Mot de passe : Admin@2026!
+  Rôle         : ADMINISTRATEUR (accès total)
+
+Compte employé test (si présent dans le dump) :
+  Kaba DIOUBATE — diabatekaba198@gmail.com — matricule SNG-2026-002
+
+⚠️ Changer les mots de passe en production !
+
+5. SYSTÈME D'AUTORISATION
+-------------------------
+Modèle granulaire : permissions par module × action.
+
+Modules :
+  EMPLOYES, CONTRATS, CONGES, PRESENCES, PAIES, RAPPORTS,
+  UTILISATEURS, ROLES, REFERENTIELS, VISITES, CONFIGURATION
+
+Actions :
+  AFFICHER, AJOUTER, MODIFIER, SUPPRIMER, AFFICHER_AUTRUI
+
+AFFICHER_AUTRUI : voir les données des autres employés (bulletins, congés…).
+Sans cette permission, un employé ne voit que ses propres données.
+
+Rôles pré-configurés :
+  - ADMINISTRATEUR : accès total (badge « Admin » dans la sidebar)
+  - RH             : gestion RH complète + AFFICHER_AUTRUI
+  - EMPLOYE        : self-service (ses congés, ses paies, son profil)
+  - RECEPTION      : pointage + visites + PAIES:AFFICHER + CONGES:AFFICHER/AJOUTER
+
+Rôle par défaut :
+  - Champ parDefaut sur Role — configurable dans Gestion Rôles
+  - GET  /api/v2/roles/par-defaut
+  - PUT  /api/v2/roles/{id}/par-defaut
+
+Attribution ADMINISTRATEUR :
+  - Uniquement via Gestion Utilisateurs → Modifier (admin connecté uniquement)
+  - Interdit à la création d'employé
+
+6. AUTHENTIFICATION & COMPTE
+----------------------------
+  POST /api/v2/auth/login
+  POST /api/v2/auth/activer-compte          → activation par code (nouveaux employés)
+  POST /api/v2/auth/mot-de-passe-oublie
+  POST /api/v2/auth/reinitialiser-mot-de-passe
+  GET  /api/v2/auth/moi                     → profil + permissions + photoUrl
+  PUT  /api/v2/auth/moi
+  PUT  /api/v2/auth/moi/mot-de-passe
+  POST /api/v2/auth/moi/photo               → upload photo profil
+
+JWT : 24h (odc.jwt.secret / odc.jwt.expiration)
+
+Sidebar : photo utilisateur si disponible + marque Admin (ADMINISTRATEUR).
+
+7. CONFIGURATION ENTREPRISE & NOTIFICATIONS
+-------------------------------------------
+Entreprise :
+  GET/PUT  /api/v2/configuration
+  POST     /api/v2/configuration/upload-logo
+
+Notifications (onglet E-mail & SMS) :
+  GET/PUT  /api/v2/configuration/notifications
+  POST     /api/v2/configuration/notifications/reinitialiser-modeles
+  POST     /api/v2/configuration/notifications/test-email
+  POST     /api/v2/configuration/notifications/test-sms
+  GET      /api/v2/configuration/notifications/sms-providers
+
+Modes : MOCK (journal console) | LIVE (envoi réel)
+
+Fournisseurs SMS configurables (14) :
+  TWILIO, BREVO, AFRICAS_TALKING, TERMII, VONAGE, MESSAGEBIRD,
+  AWS_SNS, CLICKSEND, PLIVO, SINCH, INFOBIP, TEXTLOCAL, TELESIGN, HTTP
+
+Champs extra (JSON sms_extra_config) : région AWS, canal Termii, etc.
+Modèles éditables avec variables {{prenom}}, {{code}}, {{entreprise}}…
+
+Secrets SMTP Brevo : application-local.properties (non versionné)
+
+8. MODULE PRÉSENCES (multi-passages)
+------------------------------------
+  POST /api/v2/presences/scanner?matricule=&localisationId=
+  GET  /api/v2/presences/aujourdhui
+  GET  /api/v2/presences/employe/{id}
+  GET  /api/v2/presences/recherche        → filtres date, site, département, statut
+  GET  /api/v2/presences/statistiques     → passages, employés, en règle, retards, sur site
+  GET  /api/v2/presences/corbeille
+  DELETE /api/v2/presences/{id}
+  POST   /api/v2/presences/{id}/restaurer
+
+Logique scan :
+  - Passage ouvert (sans sortie) → enregistre la SORTIE
+  - Sinon → nouvelle ENTREE (passage #N)
+  - Retard (après 08:30) uniquement sur la 1ère entrée du jour
+  - Plusieurs passages par employé et par jour autorisés
+
+Frontend :
+  /dashboard/pointage  → PointageQR (scan, filtres, stats réactives aux filtres)
+  /scan                → PointageMobile (plein écran, caméra)
+
+9. MODULE VISITES
+-----------------
+  CRUD visiteurs + cartes + démarrer/clôturer visite
+  Heures entrée/sortie affichées dans l'historique
+  Badges visiteurs imprimables (PDF, image)
+
+10. MODULE PAIE & EXPORT DOCUMENTS
+----------------------------------
+  Génération bulletins CNSS 5% / RTS 10%
+  Export : Imprimer, PDF, Image (documentExport.js — iframe isolée sans Tailwind oklab)
+  Badges employés et visiteurs exportables
+
+11. RAPPORTS RH
+---------------
+  GET /api/v2/rapports/synthese
+
+Présences du jour (aligné pointage) :
+  Passages, Employés pointés, En règle, Retards, Sur site
+
+12. PAGES FRONTEND
+------------------
+  /login, /activation-compte, /mot-de-passe-oublie
+  /dashboard                    → AccueilDashboard
+  /dashboard/employes           → GestionEmployes (+ rôle à la création)
+  /dashboard/contrats           → GestionContrats
+  /dashboard/conges             → GestionConges (filtrage self / RH)
+  /dashboard/pointage           → PointageQR
+  /dashboard/paie               → GestionPaie (+ export bulletin)
+  /dashboard/visites            → GestionVisites
+  /dashboard/rapports           → RapportsRH
+  /dashboard/configuration      → GestionConfiguration (entreprise + e-mail/SMS + modèles)
+  /dashboard/utilisateurs       → GestionUtilisateurs (+ promo admin)
+  /dashboard/roles              → GestionRoles (+ rôle par défaut)
+  /dashboard/referentiels       → GestionReferentiels
+  /dashboard/profil             → MonProfil
+  /scan                         → PointageMobile
+
+13. DÉMARRAGE LOCAL
+-------------------
+Backend :
+  cd backend
+  mvn spring-boot:run
+
+Frontend :
+  cd frontend
+  npm install
+  npm run dev
+
+14. CONFIGURATION (application.properties)
+------------------------------------------
+spring.datasource.url=jdbc:mariadb://localhost:3306/gestion_rh_db
+minerva.app.url=http://localhost:5173
+odc.jwt.secret=<clé-512-bit>
+odc.jwt.expiration=86400000
+odc.admin.email=admin@minerva.group
+odc.admin.password=Admin@2026!
+
+Fichier local optionnel : application-local.properties
+  (identifiants Brevo SMTP, clés API réelles)
+
+15. HISTORIQUE DES MODIFICATIONS
+--------------------------------
+[2026-07-07] Export DB + documentation définitive
+  - database/gestion_rh_db.sql : dump complet MariaDB 12.2
+  - database/schema.sql régénéré depuis la DB live
+  - database/export.ps1 : script de ré-export
+  - note.txt réécrit (état complet du projet)
+
+[2026-07-07] Profil sidebar
+  - Photo utilisateur dans la sidebar (Avatar + sync /auth/moi)
+  - Badge Admin pour rôle ADMINISTRATEUR
+
+[2026-07-07] Rapports & pointage
+  - Statistiques présences Rapports RH alignées multi-passages
+  - Stats pointage réactives aux filtres de recherche
+
+[2026-07-07] Présences & visites
+  - Pointage multi-passages (entrée/sortie/ré-entrée)
+  - Heures entrée/sortie visiteurs dans GestionVisites
+
+[2026-07-07] SMS multi-fournisseurs
+  - 14 fournisseurs SMS configurables (UI + backend)
+  - sms_extra_config JSON, ExpediteurSmsService complet
+
+[2026-07-07] Permissions & rôles
+  - AFFICHER_AUTRUI : confidentialité paie/congés par employé
+  - Rôle RECEPTION : paie + congés self-service
+  - Rôle par défaut configurable
+  - Attribution ADMIN via Gestion Utilisateurs
+
+[2026-07-07] Export documents
+  - PDF/Image bulletins et badges (fix oklab Tailwind 4)
+  - DocumentExportButtons sur paie et visites
+
+[2026-07-06] Phases 1 à 5 initiales
+  - Auth, rôles, employés, contrats, congés, présences, paie, visites
+  - Configuration entreprise, rapports RH, validations frontend/backend
+
+================================================================================

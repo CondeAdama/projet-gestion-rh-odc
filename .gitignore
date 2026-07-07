@@ -1,0 +1,9 @@
+backend/src/main/resources/application-local.properties
+backend/target/
+backend/uploads/
+frontend/node_modules/
+frontend/dist/
+.idea/
+*.iml
+.env
+.env.*
