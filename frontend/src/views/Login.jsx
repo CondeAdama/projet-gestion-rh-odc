@@ -14,6 +14,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', motDePasse: '' });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [wakeHint, setWakeHint] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,6 +27,19 @@ export default function Login() {
     if (!user?.token) return;
     navigate(redirectApresLogin, { replace: true });
   }, [user, redirectApresLogin, navigate]);
+
+  useEffect(() => {
+    api.get('/health/ping', { timeout: 90_000 }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      setWakeHint(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setWakeHint(true), 10_000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +54,7 @@ export default function Login() {
       login(res.data);
       navigate(redirectApresLogin, { replace: true });
     } catch (err) {
-      setError(getApiError(err, 'Identifiants invalides'));
+      setError(getApiError(err, 'Identifiants invalides ou serveur indisponible'));
     } finally {
       setLoading(false);
     }
@@ -51,6 +65,13 @@ export default function Login() {
       title="Connexion"
       subtitle={`Accédez à votre espace Gestion RH — ${companyName}`}
     >
+      {wakeHint && loading && (
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="text-amber-200/90 text-sm text-center mb-4 px-2">
+          Réveil du serveur en cours (plan gratuit Render, jusqu&apos;à 1–2 min après une longue inactivité)…
+        </motion.p>
+      )}
+
       {error && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="flex items-center gap-2 bg-red-500/10 text-red-300 p-3 rounded-xl mb-5 text-sm border border-red-500/20">
