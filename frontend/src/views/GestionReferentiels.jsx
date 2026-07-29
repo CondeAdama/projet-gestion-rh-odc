@@ -3,6 +3,7 @@ import { BookOpen, Plus, Trash2, Edit2, RotateCcw } from 'lucide-react';
 import api from '../services/api';
 import { getApiError } from '../utils/validation';
 import { useAuth } from '../context/AuthContext';
+import { useDialog } from '../context/DialogContext';
 import { Modal } from '../components/ui/Modal';
 import { InputField, SelectField } from '../components/ui/FormFields';
 
@@ -15,6 +16,7 @@ function ReferentielTab({ type, label, fields, departements = [] }) {
   const [editItem, setEditItem] = useState(null);
   const [error, setError] = useState(null);
   const { hasPermission } = useAuth();
+  const { confirm } = useDialog();
 
   const fetchItems = async () => {
     setError(null);
@@ -80,7 +82,13 @@ function ReferentielTab({ type, label, fields, departements = [] }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Déplacer vers la corbeille ?')) return;
+    const ok = await confirm({
+      title: 'Corbeille',
+      message: 'Déplacer vers la corbeille ?',
+      danger: true,
+      confirmLabel: 'Déplacer',
+    });
+    if (!ok) return;
     setError(null);
     try {
       await api.delete(`/referentiels/${type}/${id}`);

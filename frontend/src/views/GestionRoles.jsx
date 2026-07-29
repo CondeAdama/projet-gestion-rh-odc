@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Plus, Edit2, Trash2, X, Save, Star } from 'lucide-react';
 import api from '../services/api';
 import { getApiError } from '../utils/validation';
+import { useDialog } from '../context/DialogContext';
 
 const ACTIONS = ['AFFICHER', 'AFFICHER_AUTRUI', 'AJOUTER', 'MODIFIER', 'SUPPRIMER'];
 const ACTION_LABELS = {
@@ -14,6 +15,7 @@ const ACTION_LABELS = {
 };
 
 export default function GestionRoles() {
+  const { confirm } = useDialog();
   const [roles, setRoles] = useState([]);
   const [modules, setModules] = useState([]);
   const [actions, setActions] = useState([]);
@@ -98,7 +100,13 @@ export default function GestionRoles() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Supprimer ce rôle ? (suppression logique)')) return;
+    const ok = await confirm({
+      title: 'Supprimer le rôle',
+      message: 'Supprimer ce rôle ? (suppression logique)',
+      danger: true,
+      confirmLabel: 'Supprimer',
+    });
+    if (!ok) return;
     try {
       await api.delete(`/roles/${id}`);
       fetchData();

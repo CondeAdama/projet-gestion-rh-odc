@@ -10,6 +10,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getApiError } from '../utils/validation';
 import { normaliserMatriculeScan } from '../utils/scan';
+import { useDialog } from '../context/DialogContext';
 import { Avatar, PageHeader, EmptyState } from '../components/ui/Display';
 import { STATUT_PRESENCE_STYLES } from '../utils/format';
 
@@ -37,6 +38,7 @@ function computeStatsFromPresences(presences) {
 
 export default function PointageQR() {
   const { hasPermission } = useAuth();
+  const { confirm } = useDialog();
   const today = new Date().toISOString().slice(0, 10);
   const [localisations, setLocalisations] = useState([]);
   const [departements, setDepartements] = useState([]);
@@ -119,7 +121,13 @@ export default function PointageQR() {
   useEffect(() => { refreshPresences(); }, [presenceTab]);
 
   const handleDeletePresence = async (id) => {
-    if (!confirm('Déplacer ce pointage vers la corbeille ?')) return;
+    const ok = await confirm({
+      title: 'Corbeille',
+      message: 'Déplacer ce pointage vers la corbeille ?',
+      danger: true,
+      confirmLabel: 'Déplacer',
+    });
+    if (!ok) return;
     await api.delete(`/presences/${id}`);
     refreshPresences();
   };

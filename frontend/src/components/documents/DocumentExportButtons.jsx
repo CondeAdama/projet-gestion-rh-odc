@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Printer, FileDown, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { useDialog } from '../../context/DialogContext';
 import {
   downloadElementAsImage,
   downloadElementAsPdf,
@@ -16,6 +17,7 @@ export function DocumentExportButtons({
   className = '',
 }) {
   const [busy, setBusy] = useState(null);
+  const { alert } = useDialog();
 
   const run = async (action, label) => {
     setBusy(label);
@@ -23,7 +25,11 @@ export function DocumentExportButtons({
       await action();
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Erreur lors de l\'export. Réessayez.');
+      await alert({
+        title: 'Export impossible',
+        message: err.message || "Erreur lors de l'export. Réessayez.",
+        variant: 'error',
+      });
     } finally {
       setBusy(null);
     }

@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useConfig } from '../context/ConfigContext';
-import { PageHeader, StatCard } from '../components/ui/Display';
+import { PageHeader, StatCard, LogoImage } from '../components/ui/Display';
 import { formatGNF, MOIS_LABELS } from '../utils/format';
 
 export default function RapportsRH() {
@@ -57,7 +57,13 @@ export default function RapportsRH() {
       {/* En-tête document avec logo */}
       <div className="bg-white/60 border border-white/20 rounded-2xl p-6 flex items-center gap-4 print:block">
         {logoUrl ? (
-          <img src={logoUrl} alt="Logo" className="w-16 h-16 object-contain rounded-xl border bg-white p-1" />
+          <LogoImage
+            src={logoUrl}
+            alt="Logo"
+            companyName={config?.nomEntreprise}
+            className="w-16 h-16 object-contain rounded-xl border bg-white p-1"
+            fallbackClassName="w-16 h-16 rounded-xl bg-[#1a4a8e] text-white flex items-center justify-center text-xs font-bold"
+          />
         ) : (
           <div className="w-16 h-16 rounded-xl bg-[#1a4a8e] text-white flex items-center justify-center text-xs font-bold">RH</div>
         )}

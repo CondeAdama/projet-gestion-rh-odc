@@ -1,5 +1,6 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useConfig } from '../../context/ConfigContext';
+import { LogoImage } from '../ui/Display';
 
 export default function CarteVisiteur({
   visiteur,
@@ -21,7 +22,14 @@ export default function CarteVisiteur({
       <div className="bg-[#1e3a5f] text-white px-4 pt-4 pb-3">
         <div className="flex items-center gap-2 mb-2">
           {logoUrl ? (
-            <img src={logoUrl} alt="" className="w-10 h-10 object-contain bg-white rounded p-0.5" crossOrigin="anonymous" />
+            <LogoImage
+              src={logoUrl}
+              alt=""
+              companyName={config?.nomEntreprise}
+              crossOrigin="anonymous"
+              className="w-10 h-10 object-contain bg-white rounded p-0.5"
+              fallbackClassName="w-10 h-10 bg-white/20 border border-white/40 rounded text-[7px] flex items-center justify-center font-bold text-white"
+            />
           ) : (
             <div className="w-10 h-10 bg-white/20 border border-white/40 rounded text-[7px] flex items-center justify-center font-bold">
               LOGO

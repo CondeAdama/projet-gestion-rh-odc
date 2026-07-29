@@ -1,6 +1,7 @@
 package gn.odc.gestionrh.configuration.service;
 
 import gn.odc.gestionrh.common.exception.RegleMetierException;
+import gn.odc.gestionrh.common.util.AppUrlNormalizer;
 import gn.odc.gestionrh.configuration.dto.ConfigurationNotificationDTO;
 import gn.odc.gestionrh.configuration.dto.ModeleMessageDTO;
 import gn.odc.gestionrh.configuration.entity.ConfigurationNotification;
@@ -36,10 +37,13 @@ public class ConfigurationNotificationService {
     @Transactional
     public String obtenirAppUrl() {
         ConfigurationNotification config = trouverOuCreer();
-        if (config.getAppUrl() != null && !config.getAppUrl().isBlank()) {
-            return config.getAppUrl().trim();
+        String resolved = AppUrlNormalizer.resolveFrontendUrl(config.getAppUrl(), defaultAppUrl);
+        String stored = AppUrlNormalizer.trimTrailingSlash(config.getAppUrl());
+        if (!resolved.equals(stored)) {
+            config.setAppUrl(resolved);
+            repository.save(config);
         }
-        return defaultAppUrl;
+        return resolved;
     }
 
     @Transactional

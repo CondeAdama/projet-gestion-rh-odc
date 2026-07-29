@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ConfigProvider } from './context/ConfigContext';
+import { DialogProvider } from './context/DialogContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './views/Login';
 import ActivationCompte from './views/ActivationCompte';
@@ -26,6 +27,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ConfigProvider>
+      <DialogProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -81,6 +83,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
+      </DialogProvider>
       </ConfigProvider>
     </AuthProvider>
   );

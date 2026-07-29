@@ -1,5 +1,6 @@
 import { useConfig } from '../../context/ConfigContext';
 import MinervaLogo from '../auth/MinervaLogo';
+import { LogoImage } from '../ui/Display';
 
 /**
  * Affichage centralisé du logo et du nom d'entreprise (config dynamique).
@@ -20,10 +21,12 @@ export default function CompanyBrand({ size = 'md', showSubtitle = true, classNa
   if (logoUrl) {
     return (
       <div className={`flex items-center gap-3 ${className}`}>
-        <img
+        <LogoImage
           src={logoUrl}
           alt={companyName}
+          companyName={companyName}
           className={`${s.img} object-contain rounded-2xl shadow-lg bg-white p-0.5`}
+          fallbackClassName={`${s.img} rounded-2xl shadow-lg bg-gradient-to-br from-violet-800 to-gray-900 text-white flex items-center justify-center text-sm font-bold`}
         />
         <div className="min-w-0">
           <p className={`${s.title} font-bold tracking-tight truncate ${textMain}`}>{companyName}</p>
