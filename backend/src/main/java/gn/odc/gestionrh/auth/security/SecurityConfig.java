@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .requestMatchers("/roles/modules").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/configuration").permitAll()
+                .requestMatchers("/health/**").permitAll()
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

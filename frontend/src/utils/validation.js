@@ -55,8 +55,16 @@ export function validateImageFile(file) {
 }
 
 export function getApiError(err, fallback = 'Une erreur est survenue') {
-  const data = err?.response?.data;
-  if (!data) return fallback;
+  if (!err?.response) {
+    if (err?.code === 'ECONNABORTED') {
+      return 'Le serveur met trop de temps à répondre (réveil Render / base Aiven). Réessayez dans un instant.';
+    }
+    if (err?.message === 'Network Error' || err?.code === 'ERR_NETWORK') {
+      return 'Impossible de joindre le serveur. Vérifiez votre connexion ou réessayez après le réveil du serveur.';
+    }
+    return fallback;
+  }
+  const data = err.response.data;
   if (data.errors && typeof data.errors === 'object') {
     const first = Object.values(data.errors)[0];
     if (first) return first;
