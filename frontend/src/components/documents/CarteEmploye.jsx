@@ -1,6 +1,6 @@
 import { QRCodeSVG } from 'qrcode.react';
-import { resolveAssetUrl } from '../../utils/assets';
 import { useConfig } from '../../context/ConfigContext';
+import { LogoImage, PhotoImage } from '../ui/Display';
 
 export function DocumentHeader({ title, subtitle, className = '' }) {
   const { config, logoUrl } = useConfig();
@@ -9,7 +9,14 @@ export function DocumentHeader({ title, subtitle, className = '' }) {
     <div className={`flex justify-between items-start border-b-2 border-gray-900 pb-4 ${className}`}>
       <div className="flex items-start gap-3">
         {logoUrl ? (
-          <img src={logoUrl} alt="Logo" className="w-14 h-14 object-contain rounded-lg border border-gray-200 bg-white p-1" crossOrigin="anonymous" />
+          <LogoImage
+            src={logoUrl}
+            alt="Logo"
+            companyName={config?.nomEntreprise}
+            crossOrigin="anonymous"
+            className="w-14 h-14 object-contain rounded-lg border border-gray-200 bg-white p-1"
+            fallbackClassName="w-14 h-14 rounded-lg bg-[#1a4a8e] text-white flex items-center justify-center text-xs font-bold"
+          />
         ) : (
           <div className="w-14 h-14 rounded-lg bg-[#1a4a8e] text-white flex items-center justify-center text-xs font-bold">
             LOGO
@@ -33,7 +40,6 @@ export function DocumentHeader({ title, subtitle, className = '' }) {
 
 export default function CarteEmploye({ employe, id = 'carte-employe' }) {
   const { config, logoUrl } = useConfig();
-  const photoUrl = resolveAssetUrl(employe?.photoUrl);
   const generated = new Date().toLocaleDateString('fr-FR');
   const validUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR');
 
@@ -47,7 +53,14 @@ export default function CarteEmploye({ employe, id = 'carte-employe' }) {
       <div className="bg-[#1a4a8e] text-white px-4 pt-4 pb-3">
         <div className="flex items-center gap-2 mb-2">
           {logoUrl ? (
-            <img src={logoUrl} alt="" className="w-10 h-10 object-contain bg-white rounded p-0.5" crossOrigin="anonymous" />
+            <LogoImage
+              src={logoUrl}
+              alt=""
+              companyName={config?.nomEntreprise}
+              crossOrigin="anonymous"
+              className="w-10 h-10 object-contain bg-white rounded p-0.5"
+              fallbackClassName="w-10 h-10 bg-white/20 border border-white/40 rounded text-[7px] flex items-center justify-center font-bold text-white"
+            />
           ) : (
             <div className="w-10 h-10 bg-white/20 border border-white/40 rounded text-[7px] flex items-center justify-center font-bold">
               LOGO
@@ -65,13 +78,14 @@ export default function CarteEmploye({ employe, id = 'carte-employe' }) {
       {/* Corps blanc */}
       <div className="flex-1 bg-white px-4 py-3 flex gap-3">
         <div className="flex flex-col items-center w-[90px] flex-shrink-0">
-          {photoUrl ? (
-            <img src={photoUrl} alt="" className="w-[72px] h-[88px] object-cover rounded border-2 border-[#1a4a8e]/20" crossOrigin="anonymous" />
-          ) : (
-            <div className="w-[72px] h-[88px] rounded bg-gray-100 border-2 border-[#1a4a8e]/20 flex items-center justify-center text-xl font-bold text-[#1a4a8e]">
-              {(employe?.prenom?.[0] || '')}{(employe?.nom?.[0] || '')}
-            </div>
-          )}
+          <PhotoImage
+            src={employe?.photoUrl}
+            prenom={employe?.prenom}
+            nom={employe?.nom}
+            crossOrigin="anonymous"
+            className="w-[72px] h-[88px] object-cover rounded border-2 border-[#1a4a8e]/20"
+            fallbackClassName="w-[72px] h-[88px] rounded bg-gray-100 border-2 border-[#1a4a8e]/20 flex items-center justify-center text-xl font-bold text-[#1a4a8e]"
+          />
           <p className="text-[9px] font-black text-[#1a4a8e] uppercase text-center mt-2 leading-tight">
             {employe?.nom}<br />{employe?.prenom}
           </p>

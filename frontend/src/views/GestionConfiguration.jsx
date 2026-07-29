@@ -7,9 +7,10 @@ import api from '../services/api';
 import { useConfig } from '../context/ConfigContext';
 import { getApiError, validateImageFile, validatePhone, validateEmail } from '../utils/validation';
 import { SMS_PROVIDERS, getSmsProvider, getNestedValue, setNestedValue } from '../utils/smsProviders';
-import { PageHeader } from '../components/ui/Display';
+import { PageHeader, LogoImage } from '../components/ui/Display';
 import { InputField, SelectField } from '../components/ui/FormFields';
 import PasswordField from '../components/ui/PasswordField';
+import { useDialog } from '../context/DialogContext';
 
 const EMPTY_ENTREPRISE = {
   nomEntreprise: '', adresse: '', telephone: '', email: '', nif: '',
@@ -52,6 +53,7 @@ const MODELES_META = [
 
 export default function GestionConfiguration() {
   const { config, refresh, logoUrl } = useConfig();
+  const { confirm } = useDialog();
   const [tab, setTab] = useState('entreprise');
   const [form, setForm] = useState(EMPTY_ENTREPRISE);
   const [notif, setNotif] = useState(EMPTY_NOTIF);
@@ -134,7 +136,13 @@ export default function GestionConfiguration() {
   };
 
   const handleResetModeles = async () => {
-    if (!window.confirm('Réinitialiser tous les modèles aux textes par défaut ?')) return;
+    const ok = await confirm({
+      title: 'Réinitialiser les modèles',
+      message: 'Réinitialiser tous les modèles aux textes par défaut ?',
+      danger: true,
+      confirmLabel: 'Réinitialiser',
+    });
+    if (!ok) return;
     setError(null);
     setSuccess(null);
     try {
@@ -315,7 +323,13 @@ export default function GestionConfiguration() {
             <h2 className="font-semibold flex items-center gap-2"><Image size={18} /> Logo entreprise</h2>
             <div className="flex items-center justify-center p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200 min-h-[140px]">
               {previewLogo ? (
-                <img src={previewLogo} alt="Logo" className="max-h-24 max-w-full object-contain" />
+                <LogoImage
+                  src={previewLogo}
+                  alt="Logo"
+                  companyName={form.nomEntreprise || config?.nomEntreprise}
+                  className="max-h-24 max-w-full object-contain"
+                  fallbackClassName="w-24 h-24 rounded-2xl bg-gradient-to-br from-violet-800 to-gray-900 text-white flex items-center justify-center text-lg font-bold"
+                />
               ) : (
                 <div className="text-center text-gray-400">
                   <Settings size={32} className="mx-auto mb-2 opacity-40" />
@@ -344,7 +358,8 @@ export default function GestionConfiguration() {
                 { value: 'MOCK', label: 'Simulation (console + journal)' },
                 { value: 'LIVE', label: 'Envoi réel (SMTP + SMS)' },
               ]} />
-            <InputField label="URL de l'application (liens d'activation)" {...n('appUrl')} placeholder="http://localhost:5173" />
+            <InputField label="URL de l'application (liens d'activation)" {...n('appUrl')} placeholder="https://minerva-rh.netlify.app" />
+            <p className="text-xs text-gray-500 -mt-2">Production : https://minerva-rh.netlify.app (variable Render <code className="text-violet-700">MINERVA_APP_URL</code>).</p>
             <p className="text-xs text-gray-400">
               En mode <strong>Simulation</strong>, les messages sont journalisés sans envoi réel.
               En mode <strong>Envoi réel</strong>, configurez SMTP et SMS ci-dessous.

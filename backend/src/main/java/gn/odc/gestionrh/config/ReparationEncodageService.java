@@ -2,9 +2,11 @@ package gn.odc.gestionrh.config;
 
 import gn.odc.gestionrh.configuration.repository.ConfigurationNotificationRepository;
 import gn.odc.gestionrh.configuration.service.NotificationModeleService;
+import gn.odc.gestionrh.common.util.AppUrlNormalizer;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -107,6 +109,9 @@ public class ReparationEncodageService {
     private final ConfigurationNotificationRepository configurationNotificationRepository;
     private final NotificationModeleService notificationModeleService;
 
+    @Value("${minerva.app.url:http://localhost:5173}")
+    private String defaultAppUrl;
+
     @Transactional
     public void reparer() {
         int colonnes = 0;
@@ -122,6 +127,7 @@ public class ReparationEncodageService {
 
         int referentiels = reparerReferentielsParCode();
         reparerEmployeAdmin();
+        reparerUrlsFrontendNotifications();
         reparerModelesNotifications();
 
         if (colonnes > 0 || referentiels > 0) {
@@ -221,6 +227,31 @@ public class ReparationEncodageService {
         if (updated > 0) {
             log.info("Nom employé admin corrigé : {} ligne(s)", updated);
         }
+    }
+
+    private void reparerUrlsFrontendNotifications() {
+        String canon = AppUrlNormalizer.resolveFrontendUrl(null, defaultAppUrl);
+        configurationNotificationRepository.findAll().forEach(config -> {
+            boolean dirty = false;
+            String resolved = AppUrlNormalizer.resolveFrontendUrl(config.getAppUrl(), defaultAppUrl);
+            String stored = AppUrlNormalizer.trimTrailingSlash(config.getAppUrl());
+            if (!resolved.equals(stored)) {
+                config.setAppUrl(resolved);
+                dirty = true;
+            }
+            String modeles = config.getModelesMessages();
+            if (modeles != null && modeles.contains("minerva-rh.onrender.com")) {
+                String corrected = AppUrlNormalizer.replaceLegacyFrontendUrls(modeles, canon);
+                if (!corrected.equals(modeles)) {
+                    config.setModelesMessages(corrected);
+                    dirty = true;
+                }
+            }
+            if (dirty) {
+                configurationNotificationRepository.save(config);
+                log.info("URL frontend des notifications alignée sur {}", resolved);
+            }
+        });
     }
 
     private void reparerModelesNotifications() {

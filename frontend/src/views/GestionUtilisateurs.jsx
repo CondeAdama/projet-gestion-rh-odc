@@ -3,12 +3,14 @@ import { Users, Trash2, RotateCcw, Shield, Mail, RefreshCw, Edit2 } from 'lucide
 import api from '../services/api';
 import { getApiError } from '../utils/validation';
 import { useAuth } from '../context/AuthContext';
+import { useDialog } from '../context/DialogContext';
 import { PageHeader, EmptyState } from '../components/ui/Display';
 import { Modal } from '../components/ui/Modal';
 import { SelectField } from '../components/ui/FormFields';
 
 export default function GestionUtilisateurs() {
   const { user, hasPermission } = useAuth();
+  const { confirm, alert } = useDialog();
   const isAdmin = user?.roles?.includes('ADMINISTRATEUR');
   const [utilisateurs, setUtilisateurs] = useState([]);
   const [corbeille, setCorbeille] = useState([]);
@@ -55,7 +57,13 @@ export default function GestionUtilisateurs() {
   const liste = tab === 'actifs' ? utilisateurs : corbeille;
 
   const handleDelete = async (id) => {
-    if (!confirm('Déplacer ce compte vers la corbeille ?')) return;
+    const ok = await confirm({
+      title: 'Corbeille',
+      message: 'Déplacer ce compte vers la corbeille ?',
+      danger: true,
+      confirmLabel: 'Déplacer',
+    });
+    if (!ok) return;
     try {
       await api.delete(`/utilisateurs/${id}`);
       fetchData();
@@ -76,7 +84,11 @@ export default function GestionUtilisateurs() {
   const handleRenvoyer = async (id) => {
     try {
       await api.post(`/utilisateurs/${id}/renvoyer-activation`);
-      alert('Code d\'activation renvoyé par e-mail/SMS.');
+      await alert({
+        title: 'Activation renvoyée',
+        message: "Code d'activation renvoyé par e-mail/SMS.",
+        variant: 'success',
+      });
     } catch (err) {
       setError(getApiError(err, 'Erreur'));
     }
@@ -92,7 +104,12 @@ export default function GestionUtilisateurs() {
     e.preventDefault();
     if (!form.roleCode) { setError('Sélectionnez un rôle'); return; }
     if (form.roleCode === 'ADMINISTRATEUR' && !editUser.roles?.includes('ADMINISTRATEUR')) {
-      if (!confirm('Attribuer le rôle Administrateur Système ?\n\nCet utilisateur aura un accès total à toutes les fonctionnalités.')) {
+      const ok = await confirm({
+        title: 'Administrateur système',
+        message: "Attribuer le rôle Administrateur Système ?\n\nCet utilisateur aura un accès total à toutes les fonctionnalités.",
+        confirmLabel: 'Attribuer',
+      });
+      if (!ok) {
         return;
       }
     }

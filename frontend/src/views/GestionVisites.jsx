@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Play, Square, UserPlus, KeySquare, AlertCircle, Edit2, Trash2, RotateCcw, Printer } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useDialog } from '../context/DialogContext';
 import { getApiError, validatePhone } from '../utils/validation';
 import { formatDate, formatTime } from '../utils/format';
 import { Modal } from '../components/ui/Modal';
@@ -13,6 +14,7 @@ import { BADGE_PRINT_CSS } from '../utils/documentExport';
 
 export default function GestionVisites() {
   const { hasPermission } = useAuth();
+  const { confirm } = useDialog();
   const canDemarrer = hasPermission('VISITES', 'AJOUTER');
 
   const [visiteurs, setVisiteurs] = useState([]);
@@ -134,7 +136,13 @@ export default function GestionVisites() {
   };
 
   const handleDeleteVisiteur = async (id) => {
-    if (!confirm('Déplacer ce visiteur vers la corbeille ?')) return;
+    const ok = await confirm({
+      title: 'Corbeille',
+      message: 'Déplacer ce visiteur vers la corbeille ?',
+      danger: true,
+      confirmLabel: 'Déplacer',
+    });
+    if (!ok) return;
     try {
       await api.delete(`/visites/visiteurs/${id}`);
       fetchData();
@@ -202,7 +210,12 @@ export default function GestionVisites() {
   };
 
   const handleCloturer = async (id) => {
-    if (!window.confirm('Clôturer cette visite et libérer la carte ?')) return;
+    const ok = await confirm({
+      title: 'Clôturer la visite',
+      message: 'Clôturer cette visite et libérer la carte ?',
+      confirmLabel: 'Clôturer',
+    });
+    if (!ok) return;
     setError(null);
     try {
       await api.put(`/visites/${id}/cloturer`);

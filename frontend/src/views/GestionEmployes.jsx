@@ -10,6 +10,7 @@ import { Modal, ConfirmDialog } from '../components/ui/Modal';
 import { InputField, SelectField, SearchBar } from '../components/ui/FormFields';
 import { Avatar, StatusBadge, StatCard, EmptyState, PageHeader, TabBar } from '../components/ui/Display';
 import { getApiError, validateImageFile, validatePhone } from '../utils/validation';
+import { useDialog } from '../context/DialogContext';
 import CarteEmploye from '../components/documents/CarteEmploye';
 import { DocumentExportButtons } from '../components/documents/DocumentExportButtons';
 import { BADGE_PRINT_CSS } from '../utils/documentExport';
@@ -23,6 +24,7 @@ const EMPTY_FORM = {
 
 export default function GestionEmployes() {
   const { hasPermission } = useAuth();
+  const { alert } = useDialog();
   const [employes, setEmployes] = useState([]);
   const [corbeille, setCorbeille] = useState([]);
   const [departements, setDepartements] = useState([]);
@@ -189,7 +191,11 @@ export default function GestionEmployes() {
   const handleRenvoyerActivation = async (emp) => {
     try {
       await api.post(`/employes/${emp.id}/renvoyer-activation`);
-      alert(`Code d'activation renvoyé à ${emp.email}`);
+      await alert({
+        title: 'Activation renvoyée',
+        message: `Code d'activation renvoyé à ${emp.email}`,
+        variant: 'success',
+      });
     } catch (err) {
       setError(getApiError(err, 'Erreur'));
     }
