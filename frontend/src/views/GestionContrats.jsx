@@ -11,6 +11,18 @@ import { InputField, SelectField, SearchBar } from '../components/ui/FormFields'
 import { Avatar, StatusBadge, StatCard, EmptyState, PageHeader, TabBar } from '../components/ui/Display';
 import { STATUT_CONTRAT_STYLES, TYPE_CONTRAT_COLORS, formatGNF, formatDate } from '../utils/format';
 import { getApiError, validateContratDates, validatePositiveNumber } from '../utils/validation';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
+import { FILTER_SELECT_CLASS } from '../utils/tableExport';
+
+const CONTRAT_EXPORT_COLUMNS = [
+  { header: 'Matricule', accessor: r => r.employe?.matricule || '' },
+  { header: 'Employé', accessor: r => `${r.employe?.prenom || ''} ${r.employe?.nom || ''}`.trim() },
+  { header: 'Type', key: 'typeContrat' },
+  { header: 'Statut', key: 'statutContrat' },
+  { header: 'Salaire base', accessor: r => formatGNF(r.salaireBase) },
+  { header: 'Début', accessor: r => formatDate(r.dateDebut) },
+  { header: 'Fin', accessor: r => r.dateFin ? formatDate(r.dateFin) : '—' },
+];
 
 const EMPTY_FORM = {
   employeId: '', typeContrat: 'CDI', salaireBase: '',
@@ -27,6 +39,7 @@ export default function GestionContrats() {
   const [tab, setTab] = useState('actifs');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterEmployeId, setFilterEmployeId] = useState('');
 
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -66,7 +79,8 @@ export default function GestionContrats() {
       emp?.matricule?.toLowerCase().includes(q) ||
       c.typeContrat?.toLowerCase().includes(q);
     const matchType = !filterType || c.typeContrat === filterType;
-    return matchSearch && matchType;
+    const matchEmploye = !filterEmployeId || String(c.employeId || c.employe?.id) === filterEmployeId;
+    return matchSearch && matchType && matchEmploye;
   });
 
   const stats = {
@@ -191,19 +205,32 @@ export default function GestionContrats() {
           active={tab}
           onChange={setTab}
         />
-        <div className="flex gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-3 w-full sm:w-auto items-center justify-end">
           {tab === 'actifs' && (
-            <select value={filterType} onChange={e => setFilterType(e.target.value)}
-              className="px-3 py-2.5 bg-white/60 border border-black/5 rounded-xl text-sm outline-none">
-              <option value="">Tous les types</option>
-              <option value="CDI">CDI</option>
-              <option value="CDD">CDD</option>
-              <option value="STAGE">STAGE</option>
-            </select>
+            <>
+              <select value={filterEmployeId} onChange={e => setFilterEmployeId(e.target.value)} className={FILTER_SELECT_CLASS}>
+                <option value="">Tous les employés</option>
+                {employes.map(e => (
+                  <option key={e.id} value={String(e.id)}>{e.prenom} {e.nom} ({e.matricule})</option>
+                ))}
+              </select>
+              <select value={filterType} onChange={e => setFilterType(e.target.value)} className={FILTER_SELECT_CLASS}>
+                <option value="">Tous les types</option>
+                <option value="CDI">CDI</option>
+                <option value="CDD">CDD</option>
+                <option value="STAGE">STAGE</option>
+              </select>
+            </>
           )}
-          <div className="flex-1 sm:w-64">
+          <div className="flex-1 sm:w-64 min-w-[12rem]">
             <SearchBar value={search} onChange={e => setSearch(e.target.value)} placeholder="Employé, matricule, type..." />
           </div>
+          <TableExportButtons
+            columns={CONTRAT_EXPORT_COLUMNS}
+            rows={filtered}
+            basename={`contrats-${tab}`}
+            title="Contrats"
+          />
         </div>
       </div>
 

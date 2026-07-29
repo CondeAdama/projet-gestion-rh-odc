@@ -15,6 +15,19 @@ import CarteEmploye from '../components/documents/CarteEmploye';
 import { DocumentExportButtons } from '../components/documents/DocumentExportButtons';
 import { BADGE_PRINT_CSS } from '../utils/documentExport';
 import { STATUT_EMPLOI_STYLES, formatDate } from '../utils/format';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
+import { FILTER_SELECT_CLASS } from '../utils/tableExport';
+
+const EMPLOYE_EXPORT_COLUMNS = [
+  { header: 'Matricule', key: 'matricule' },
+  { header: 'Nom', key: 'nom' },
+  { header: 'Prénom', key: 'prenom' },
+  { header: 'Email', key: 'email' },
+  { header: 'Téléphone', key: 'telephone' },
+  { header: 'Département', key: 'departementLibelle' },
+  { header: 'Poste', key: 'posteLibelle' },
+  { header: 'Statut', key: 'statutEmploi' },
+];
 
 const EMPTY_FORM = {
   matricule: '', nom: '', prenom: '', email: '', telephone: '',
@@ -34,6 +47,7 @@ export default function GestionEmployes() {
   const [tab, setTab] = useState('actifs');
   const [search, setSearch] = useState('');
   const [filterStatut, setFilterStatut] = useState('');
+  const [filterDepartementId, setFilterDepartementId] = useState('');
 
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -82,7 +96,8 @@ export default function GestionEmployes() {
       e.matricule?.toLowerCase().includes(q) ||
       e.email?.toLowerCase().includes(q);
     const matchStatut = !filterStatut || e.statutEmploi === filterStatut;
-    return matchSearch && matchStatut;
+    const matchDept = !filterDepartementId || String(e.departementId) === filterDepartementId;
+    return matchSearch && matchStatut && matchDept;
   });
 
   const stats = {
@@ -244,22 +259,40 @@ export default function GestionEmployes() {
           active={tab}
           onChange={setTab}
         />
-        <div className="flex gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-3 w-full sm:w-auto items-center justify-end">
           {tab === 'actifs' && (
-            <select
-              value={filterStatut}
-              onChange={e => setFilterStatut(e.target.value)}
-              className="px-3 py-2.5 bg-white/60 border border-black/5 rounded-xl text-sm outline-none"
-            >
-              <option value="">Tous les statuts</option>
-              <option value="ACTIF">Actif</option>
-              <option value="SUSPENDU">Suspendu</option>
-              <option value="LICENCIE">Licencié</option>
-            </select>
+            <>
+              <select
+                value={filterDepartementId}
+                onChange={e => setFilterDepartementId(e.target.value)}
+                className={FILTER_SELECT_CLASS}
+              >
+                <option value="">Tous les départements</option>
+                {departements.map(d => (
+                  <option key={d.id} value={String(d.id)}>{d.libelle}</option>
+                ))}
+              </select>
+              <select
+                value={filterStatut}
+                onChange={e => setFilterStatut(e.target.value)}
+                className={FILTER_SELECT_CLASS}
+              >
+                <option value="">Tous les statuts</option>
+                <option value="ACTIF">Actif</option>
+                <option value="SUSPENDU">Suspendu</option>
+                <option value="LICENCIE">Licencié</option>
+              </select>
+            </>
           )}
-          <div className="flex-1 sm:w-64">
+          <div className="flex-1 sm:w-64 min-w-[12rem]">
             <SearchBar value={search} onChange={e => setSearch(e.target.value)} placeholder="Nom, matricule, email..." />
           </div>
+          <TableExportButtons
+            columns={EMPLOYE_EXPORT_COLUMNS}
+            rows={filtered}
+            basename={`employes-${tab}`}
+            title={`Employés — ${tab === 'corbeille' ? 'Corbeille' : 'Actifs'}`}
+          />
         </div>
       </div>
 

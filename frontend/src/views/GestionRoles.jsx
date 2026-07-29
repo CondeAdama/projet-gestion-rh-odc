@@ -4,6 +4,16 @@ import { Shield, Plus, Edit2, Trash2, X, Save, Star } from 'lucide-react';
 import api from '../services/api';
 import { getApiError } from '../utils/validation';
 import { useDialog } from '../context/DialogContext';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
+import { SearchBar } from '../components/ui/FormFields';
+
+const ROLE_EXPORT_COLUMNS = [
+  { header: 'Code', key: 'code' },
+  { header: 'Libellé', key: 'libelle' },
+  { header: 'Description', key: 'description' },
+  { header: 'Par défaut', accessor: r => (r.parDefaut ? 'Oui' : 'Non') },
+  { header: 'Système', accessor: r => (r.systeme ? 'Oui' : 'Non') },
+];
 
 const ACTIONS = ['AFFICHER', 'AFFICHER_AUTRUI', 'AJOUTER', 'MODIFIER', 'SUPPRIMER'];
 const ACTION_LABELS = {
@@ -24,6 +34,7 @@ export default function GestionRoles() {
   const [form, setForm] = useState({ code: '', libelle: '', description: '', permissions: {} });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -126,12 +137,19 @@ export default function GestionRoles() {
   };
 
   const roleParDefaut = roles.find(r => r.parDefaut);
+  const filteredRoles = roles.filter(r => {
+    const q = search.toLowerCase();
+    if (!q) return true;
+    return r.code?.toLowerCase().includes(q) ||
+      r.libelle?.toLowerCase().includes(q) ||
+      r.description?.toLowerCase().includes(q);
+  });
 
   if (loading) return <div className="p-8 text-center text-gray-500">Chargement...</div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Shield size={22} /> Gestion des Rôles
@@ -145,13 +163,19 @@ export default function GestionRoles() {
             )}
           </p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl text-sm font-semibold">
-          <Plus size={16} /> Nouveau rôle
-        </button>
+        <div className="flex flex-wrap gap-3 items-center justify-end">
+          <div className="w-full sm:w-56">
+            <SearchBar value={search} onChange={e => setSearch(e.target.value)} placeholder="Code, libellé..." />
+          </div>
+          <TableExportButtons columns={ROLE_EXPORT_COLUMNS} rows={filteredRoles} basename="roles" title="Rôles et permissions" />
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl text-sm font-semibold">
+            <Plus size={16} /> Nouveau rôle
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4">
-        {roles.map(role => (
+        {filteredRoles.map(role => (
           <motion.div
             key={role.id}
             layout

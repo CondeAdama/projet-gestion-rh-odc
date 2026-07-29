@@ -70,7 +70,20 @@ public class ReparationEncodageService {
             {"Cr??ation", "Création"},
             {"licenci??", "licencié"},
             {"D??finissez", "Définissez"},
+            {"d??finissez", "définissez"},
+            {"{{lien}} ??? D??finissez", "{{lien}} — Définissez"},
+            {" ??? D??finissez", " — Définissez"},
+            {" ??? ", " — "},
+            {"param??tr??", "paramétré"},
+            {"Param??tr??", "Paramétré"},
+            {"approuv??e", "approuvée"},
+            {"G??n??r??", "Généré"},
+            {"g??n??r??", "généré"},
             {"r??ponse", "réponse"},
+            {"Valid??", "Validé"},
+            {"valid??", "validé"},
+            {"r??initialisez", "réinitialisez"},
+            {"R??initialisez", "Réinitialisez"},
     };
 
     private static final String[][] ROLES_DEFAUT = {
@@ -123,7 +136,7 @@ public class ReparationEncodageService {
         colonnes += reparerColonnes("configuration_entreprise", "adresse", "slogan");
         colonnes += reparerColonnes("conges", "commentaire_rh");
         colonnes += reparerColonnes("notifications_log", "sujet", "contenu");
-        colonnes += reparerColonnes("visiteurs", "societe");
+        colonnes += reparerColonnes("visiteurs", "entreprise");
 
         int referentiels = reparerReferentielsParCode();
         reparerEmployeAdmin();

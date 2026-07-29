@@ -13,6 +13,19 @@ import {
   STATUT_CONGE_STYLES, TYPE_CONGE_LABELS, TYPE_CONGE_COLORS, formatDate
 } from '../utils/format';
 import { getApiError, validateDateRange } from '../utils/validation';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
+import { FILTER_SELECT_CLASS } from '../utils/tableExport';
+
+const CONGE_EXPORT_COLUMNS = [
+  { header: 'Employé', accessor: r => `${r.employe?.prenom || ''} ${r.employe?.nom || ''}`.trim() },
+  { header: 'Matricule', accessor: r => r.employe?.matricule || '' },
+  { header: 'Type', accessor: r => TYPE_CONGE_LABELS[r.typeConge] || r.typeConge },
+  { header: 'Début', accessor: r => formatDate(r.dateDebut) },
+  { header: 'Fin', accessor: r => formatDate(r.dateFin) },
+  { header: 'Jours', key: 'nombreJours' },
+  { header: 'Statut', key: 'statutConge' },
+  { header: 'Motif', key: 'motif' },
+];
 
 const EMPTY_FORM = { typeConge: 'ANNUEL', dateDebut: '', dateFin: '', motif: '', employeId: '' };
 const TYPES_CONGE = Object.keys(TYPE_CONGE_LABELS).map(k => ({ value: k, label: TYPE_CONGE_LABELS[k] }));
@@ -31,6 +44,7 @@ export default function GestionConges() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('demandes');
   const [filterStatut, setFilterStatut] = useState('');
+  const [filterEmployeId, setFilterEmployeId] = useState('');
   const [search, setSearch] = useState('');
 
   const [modal, setModal] = useState(false);
@@ -85,7 +99,8 @@ export default function GestionConges() {
       c.motif?.toLowerCase().includes(q) ||
       TYPE_CONGE_LABELS[c.typeConge]?.toLowerCase().includes(q);
     const matchStatut = !filterStatut || c.statutConge === filterStatut;
-    return matchSearch && matchStatut;
+    const matchEmploye = !filterEmployeId || String(c.employeId || c.employe?.id) === filterEmployeId;
+    return matchSearch && matchStatut && matchEmploye;
   });
 
   const joursApprouves = isRh ? null : conges
@@ -232,19 +247,32 @@ export default function GestionConges() {
             ))}
           </div>
         )}
-        <div className="flex gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-3 w-full sm:w-auto items-center justify-end">
           {isRh && tab === 'demandes' && (
-            <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}
-              className="px-3 py-2.5 bg-white/60 border border-black/5 rounded-xl text-sm outline-none">
-              <option value="">Tous les statuts</option>
-              <option value="EN_ATTENTE">En attente</option>
-              <option value="APPROUVE">Approuvé</option>
-              <option value="REFUSE">Refusé</option>
-            </select>
+            <>
+              <select value={filterEmployeId} onChange={e => setFilterEmployeId(e.target.value)} className={FILTER_SELECT_CLASS}>
+                <option value="">Tous les employés</option>
+                {employes.map(e => (
+                  <option key={e.id} value={String(e.id)}>{e.prenom} {e.nom} ({e.matricule})</option>
+                ))}
+              </select>
+              <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)} className={FILTER_SELECT_CLASS}>
+                <option value="">Tous les statuts</option>
+                <option value="EN_ATTENTE">En attente</option>
+                <option value="APPROUVE">Approuvé</option>
+                <option value="REFUSE">Refusé</option>
+              </select>
+            </>
           )}
-          <div className="flex-1 sm:w-64">
+          <div className="flex-1 sm:w-64 min-w-[12rem]">
             <SearchBar value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." />
           </div>
+          <TableExportButtons
+            columns={CONGE_EXPORT_COLUMNS}
+            rows={filtered}
+            basename={`conges-${tab}`}
+            title="Demandes de congé"
+          />
         </div>
       </div>
 

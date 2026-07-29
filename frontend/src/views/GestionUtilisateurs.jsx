@@ -6,7 +6,20 @@ import { useAuth } from '../context/AuthContext';
 import { useDialog } from '../context/DialogContext';
 import { PageHeader, EmptyState } from '../components/ui/Display';
 import { Modal } from '../components/ui/Modal';
-import { SelectField } from '../components/ui/FormFields';
+import { SelectField, SearchBar } from '../components/ui/FormFields';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
+import { FILTER_SELECT_CLASS } from '../utils/tableExport';
+
+const UTILISATEUR_EXPORT_COLUMNS = [
+  { header: 'Nom', accessor: u => u.nomComplet || u.email },
+  { header: 'Email', key: 'email' },
+  { header: 'Matricule', key: 'matricule' },
+  { header: 'Département', key: 'departementLibelle' },
+  { header: 'Poste', key: 'posteLibelle' },
+  { header: 'Rôles', accessor: u => (u.roles || []).join(', ') },
+  { header: 'Activé', accessor: u => (u.confirme ? 'Oui' : 'Non') },
+  { header: 'Statut', accessor: u => (u.actif ? 'Actif' : 'Inactif') },
+];
 
 export default function GestionUtilisateurs() {
   const { user, hasPermission } = useAuth();
@@ -20,6 +33,8 @@ export default function GestionUtilisateurs() {
   const [error, setError] = useState(null);
   const [editUser, setEditUser] = useState(null);
   const [form, setForm] = useState({ roleCode: '', actif: true });
+  const [search, setSearch] = useState('');
+  const [filterRole, setFilterRole] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -55,6 +70,15 @@ export default function GestionUtilisateurs() {
   useEffect(() => { fetchData(); }, [isAdmin]);
 
   const liste = tab === 'actifs' ? utilisateurs : corbeille;
+  const filtered = liste.filter(u => {
+    const q = search.toLowerCase();
+    const matchSearch = !q ||
+      u.email?.toLowerCase().includes(q) ||
+      u.nomComplet?.toLowerCase().includes(q) ||
+      u.matricule?.toLowerCase().includes(q);
+    const matchRole = !filterRole || (u.roles || []).includes(filterRole);
+    return matchSearch && matchRole;
+  });
 
   const handleDelete = async (id) => {
     const ok = await confirm({
@@ -143,22 +167,41 @@ export default function GestionUtilisateurs() {
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <div className="flex gap-2">
-        <button onClick={() => setTab('actifs')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'actifs' ? 'bg-black text-white' : 'bg-white/50'}`}>
-          Actifs ({utilisateurs.length})
-        </button>
-        <button onClick={() => setTab('corbeille')} className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ${tab === 'corbeille' ? 'bg-black text-white' : 'bg-white/50'}`}>
-          <Trash2 size={14} /> Corbeille ({corbeille.length})
-        </button>
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+        <div className="flex gap-2">
+          <button onClick={() => setTab('actifs')} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === 'actifs' ? 'bg-black text-white' : 'bg-white/50'}`}>
+            Actifs ({utilisateurs.length})
+          </button>
+          <button onClick={() => setTab('corbeille')} className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ${tab === 'corbeille' ? 'bg-black text-white' : 'bg-white/50'}`}>
+            <Trash2 size={14} /> Corbeille ({corbeille.length})
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-3 items-center justify-end">
+          <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className={FILTER_SELECT_CLASS}>
+            <option value="">Tous les rôles</option>
+            {roles.map(r => (
+              <option key={r.code} value={r.code}>{r.libelle}</option>
+            ))}
+          </select>
+          <div className="w-full sm:w-56">
+            <SearchBar value={search} onChange={e => setSearch(e.target.value)} placeholder="Email, nom, matricule..." />
+          </div>
+          <TableExportButtons
+            columns={UTILISATEUR_EXPORT_COLUMNS}
+            rows={filtered}
+            basename={`utilisateurs-${tab}`}
+            title="Utilisateurs"
+          />
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>
-      ) : liste.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <EmptyState icon={Users} title={tab === 'corbeille' ? 'Corbeille vide' : 'Aucun utilisateur'} />
       ) : (
         <div className="grid gap-3">
-          {liste.map(u => (
+          {filtered.map(u => (
             <div key={u.id} className="glass-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <p className="font-semibold">{u.nomComplet || u.email}</p>

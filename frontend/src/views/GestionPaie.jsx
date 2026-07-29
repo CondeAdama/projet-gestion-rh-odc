@@ -9,6 +9,16 @@ import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
 import { Avatar, EmptyState, PageHeader, StatCard } from '../components/ui/Display';
 import { formatGNF, MOIS_LABELS } from '../utils/format';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
+import { FILTER_SELECT_CLASS } from '../utils/tableExport';
+
+const PAIE_EXPORT_COLUMNS = [
+  { header: 'Matricule', accessor: f => f.employe?.matricule || '' },
+  { header: 'Collaborateur', accessor: f => `${f.employe?.prenom || ''} ${f.employe?.nom || ''}`.trim() },
+  { header: 'Période', accessor: f => `${MOIS_LABELS[(f.periodeMois || 1) - 1] || f.periodeMois} ${f.periodeAnnee}` },
+  { header: 'Brut', accessor: f => formatGNF(f.salaireBrut) },
+  { header: 'Net', accessor: f => formatGNF(f.salaireNet) },
+];
 import { getApiError } from '../utils/validation';
 import { QRCodeSVG } from 'qrcode.react';
 import { DocumentHeader } from '../components/documents/CarteEmploye';
@@ -39,6 +49,7 @@ export default function GestionPaie() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMonth, setFilterMonth] = useState('ALL');
   const [filterYear, setFilterYear] = useState(String(new Date().getFullYear()));
+  const [filterListEmployeId, setFilterListEmployeId] = useState('');
   const [viewingFiche, setViewingFiche] = useState(null);
 
   const fetchData = async () => {
@@ -104,6 +115,7 @@ export default function GestionPaie() {
   };
 
   const filteredFiches = fiches.filter(f => {
+    if (filterListEmployeId && String(f.employeId) !== filterListEmployeId) return false;
     if (filterMonth !== 'ALL' && f.periodeMois !== parseInt(filterMonth)) return false;
     if (filterYear !== 'ALL' && f.periodeAnnee !== parseInt(filterYear)) return false;
     if (searchTerm) {
@@ -230,7 +242,19 @@ export default function GestionPaie() {
           <div className="bg-white/60 border border-white/20 p-6 rounded-2xl shadow-xl space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Historique des Bulletins</h2>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 items-center">
+                {canViewOthers && (
+                  <select
+                    value={filterListEmployeId}
+                    onChange={e => setFilterListEmployeId(e.target.value)}
+                    className={FILTER_SELECT_CLASS}
+                  >
+                    <option value="">Tous les employés</option>
+                    {employes.map(e => (
+                      <option key={e.id} value={String(e.id)}>{e.prenom} {e.nom} ({e.matricule})</option>
+                    ))}
+                  </select>
+                )}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
                   <input
@@ -250,6 +274,12 @@ export default function GestionPaie() {
                   <option value="2026">2026</option>
                   <option value="2027">2027</option>
                 </select>
+                <TableExportButtons
+                  columns={PAIE_EXPORT_COLUMNS}
+                  rows={filteredFiches}
+                  basename="fiches-paie"
+                  title="Bulletins de paie"
+                />
               </div>
             </div>
 

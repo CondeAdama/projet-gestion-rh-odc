@@ -6,11 +6,23 @@ import { useDialog } from '../context/DialogContext';
 import { getApiError, validatePhone } from '../utils/validation';
 import { formatDate, formatTime } from '../utils/format';
 import { Modal } from '../components/ui/Modal';
-import { InputField, SelectField } from '../components/ui/FormFields';
+import { InputField, SelectField, SearchBar } from '../components/ui/FormFields';
 import { PageHeader, StatCard, EmptyState } from '../components/ui/Display';
 import CarteVisiteur from '../components/documents/CarteVisiteur';
 import { DocumentExportButtons } from '../components/documents/DocumentExportButtons';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
 import { BADGE_PRINT_CSS } from '../utils/documentExport';
+import { FILTER_SELECT_CLASS } from '../utils/tableExport';
+
+const VISITE_EXPORT_COLUMNS = [
+  { header: 'Visiteur', accessor: v => `${v.visiteur?.prenom || ''} ${v.visiteur?.nom || ''}`.trim() },
+  { header: 'Carte', key: 'numeroCarte' },
+  { header: 'Motif', key: 'motif' },
+  { header: 'Date', accessor: v => formatDate(v.dateJour || v.dateHeureEntree) },
+  { header: 'Entrée', accessor: v => formatTime(v.heureEntree || v.dateHeureEntree) },
+  { header: 'Sortie', accessor: v => (v.heureSortie || v.dateHeureSortie) ? formatTime(v.heureSortie || v.dateHeureSortie) : '—' },
+  { header: 'Statut', key: 'statut' },
+];
 
 export default function GestionVisites() {
   const { hasPermission } = useAuth();
@@ -37,6 +49,8 @@ export default function GestionVisites() {
   const [modalError, setModalError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [printingBadge, setPrintingBadge] = useState(null);
+  const [visiteSearch, setVisiteSearch] = useState('');
+  const [visiteStatut, setVisiteStatut] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -64,6 +78,17 @@ export default function GestionVisites() {
   useEffect(() => { fetchData(); }, []);
 
   const cartesDisponibles = cartes.filter(c => c.statut === 'DISPONIBLE');
+
+  const filteredVisites = visites.filter(v => {
+    const q = visiteSearch.toLowerCase();
+    const matchSearch = !q ||
+      v.visiteur?.nom?.toLowerCase().includes(q) ||
+      v.visiteur?.prenom?.toLowerCase().includes(q) ||
+      v.numeroCarte?.toLowerCase().includes(q) ||
+      v.motif?.toLowerCase().includes(q);
+    const matchStatut = !visiteStatut || v.statut === visiteStatut;
+    return matchSearch && matchStatut;
+  });
 
   const openDemarrerModal = () => {
     if (!canDemarrer) {
@@ -340,8 +365,26 @@ export default function GestionVisites() {
       </div>
 
       <div className="glass-card p-4 sm:p-6">
-        <h2 className="font-semibold mb-4">Historique des visites</h2>
-        {visites.length === 0 ? (
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+          <h2 className="font-semibold">Historique des visites</h2>
+          <div className="flex flex-wrap gap-3 items-center justify-end">
+            <select value={visiteStatut} onChange={e => setVisiteStatut(e.target.value)} className={FILTER_SELECT_CLASS}>
+              <option value="">Tous les statuts</option>
+              <option value="EN_COURS">En cours</option>
+              <option value="TERMINEE">Terminée</option>
+            </select>
+            <div className="w-full sm:w-56">
+              <SearchBar value={visiteSearch} onChange={e => setVisiteSearch(e.target.value)} placeholder="Visiteur, carte, motif..." />
+            </div>
+            <TableExportButtons
+              columns={VISITE_EXPORT_COLUMNS}
+              rows={filteredVisites}
+              basename="visites"
+              title="Historique des visites"
+            />
+          </div>
+        </div>
+        {filteredVisites.length === 0 ? (
           <EmptyState icon={UserPlus} title="Aucune visite" description="Les visites enregistrées apparaîtront ici." />
         ) : (
           <div className="overflow-x-auto -mx-2 sm:mx-0">
@@ -359,7 +402,7 @@ export default function GestionVisites() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
-                {visites.map(v => (
+                {filteredVisites.map(v => (
                   <tr key={v.id} className="hover:bg-gray-50/50">
                     <td className="py-3 font-medium px-2">{v.visiteur?.prenom} {v.visiteur?.nom}</td>
                     <td className="py-3 font-mono text-xs px-2">{v.numeroCarte}</td>

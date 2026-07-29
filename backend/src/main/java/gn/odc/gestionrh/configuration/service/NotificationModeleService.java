@@ -41,9 +41,9 @@ public class NotificationModeleService {
                 }
                 ModeleMessageDTO base = result.get(cle);
                 ModeleMessageDTO defaut = defauts.get(cle);
-                base.setEmailSujet(choisir(custom.getEmailSujet(), defaut.getEmailSujet()));
-                base.setEmailCorps(choisir(custom.getEmailCorps(), defaut.getEmailCorps()));
-                base.setSmsCorps(choisir(custom.getSmsCorps(), defaut.getSmsCorps()));
+                base.setEmailSujet(choisirSansCorruption(custom.getEmailSujet(), defaut.getEmailSujet()));
+                base.setEmailCorps(choisirSansCorruption(custom.getEmailCorps(), defaut.getEmailCorps()));
+                base.setSmsCorps(choisirSansCorruption(custom.getSmsCorps(), defaut.getSmsCorps()));
             }
         } catch (Exception e) {
             log.warn("Modèles de notification invalides, utilisation des valeurs par défaut : {}", e.getMessage());
@@ -86,9 +86,9 @@ public class NotificationModeleService {
         if (modele == null || defaut == null) {
             throw new IllegalArgumentException("Modèle inconnu : " + cle);
         }
-        String sujet = remplacer(choisir(modele.getEmailSujet(), defaut.getEmailSujet()), variables);
-        String email = remplacer(choisir(modele.getEmailCorps(), defaut.getEmailCorps()), variables);
-        String sms = remplacer(choisir(modele.getSmsCorps(), defaut.getSmsCorps()), variables);
+        String sujet = remplacer(choisirSansCorruption(modele.getEmailSujet(), defaut.getEmailSujet()), variables);
+        String email = remplacer(choisirSansCorruption(modele.getEmailCorps(), defaut.getEmailCorps()), variables);
+        String sms = remplacer(choisirSansCorruption(modele.getSmsCorps(), defaut.getSmsCorps()), variables);
         if (sms.isBlank()) {
             sms = email;
         }
@@ -102,11 +102,22 @@ public class NotificationModeleService {
         return new MessageRendu(sujet, email, sms);
     }
 
-    private String choisir(String valeur, String defaut) {
+    private String choisirSansCorruption(String valeur, String defaut) {
         if (valeur == null || valeur.isBlank()) {
             return defaut != null ? defaut : "";
         }
+        if (estCorrompu(valeur)) {
+            return defaut != null ? defaut : "";
+        }
         return valeur;
+    }
+
+    static boolean estCorrompu(String texte) {
+        if (texte == null || texte.isBlank()) {
+            return false;
+        }
+        return texte.contains("??") || texte.contains("├") || texte.contains("Ã")
+                || texte.contains("ΓÇ") || texte.contains("â€");
     }
 
     private ModeleMessageDTO copier(ModeleMessageDTO source) {

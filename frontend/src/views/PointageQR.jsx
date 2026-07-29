@@ -12,7 +12,20 @@ import { getApiError } from '../utils/validation';
 import { normaliserMatriculeScan } from '../utils/scan';
 import { useDialog } from '../context/DialogContext';
 import { Avatar, PageHeader, EmptyState } from '../components/ui/Display';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
 import { STATUT_PRESENCE_STYLES } from '../utils/format';
+import { FILTER_SELECT_CLASS } from '../utils/tableExport';
+
+const PRESENCE_EXPORT_COLUMNS = [
+  { header: 'Matricule', accessor: p => p.employe?.matricule || '' },
+  { header: 'Collaborateur', accessor: p => `${p.employe?.prenom || ''} ${p.employe?.nom || ''}`.trim() },
+  { header: 'Site', key: 'localisationNom' },
+  { header: 'Date', key: 'dateJour' },
+  { header: 'Passage', accessor: p => p.numeroPassage || 1 },
+  { header: 'Entrée', accessor: p => p.heureEntree?.slice?.(0, 5) || p.heureEntree || '' },
+  { header: 'Sortie', accessor: p => p.heureSortie?.slice?.(0, 5) || p.heureSortie || '—' },
+  { header: 'Statut', accessor: p => STATUT_PRESENCE_STYLES[p.statutPresence]?.label || p.statutPresence },
+];
 
 const SCAN_URL = `${window.location.origin}/scan`;
 
@@ -44,7 +57,7 @@ export default function PointageQR() {
   const [departements, setDepartements] = useState([]);
   const [selectedLocal, setSelectedLocal] = useState('');
   const [presenceTab, setPresenceTab] = useState('jour');
-  const [filters, setFilters] = useState({ dateDebut: today, dateFin: today, localisationId: '', departementId: '', statutPresence: '' });
+  const [filters, setFilters] = useState({ dateDebut: today, dateFin: today, localisationId: '', departementId: '', statutPresence: '', employeId: '' });
   const [corbeille, setCorbeille] = useState([]);
   const [matriculeInput, setMatriculeInput] = useState('');
   const [loadingData, setLoadingData] = useState(true);
@@ -137,7 +150,10 @@ export default function PointageQR() {
     refreshPresences();
   };
 
-  const displayedPresences = presenceTab === 'corbeille' ? corbeille : recentPresences;
+  const displayedPresences = (presenceTab === 'corbeille' ? corbeille : recentPresences).filter(p => {
+    if (!filters.employeId) return true;
+    return String(p.employeId || p.employe?.id) === filters.employeId;
+  });
 
   const doScan = useCallback(async (decoded) => {
     const clean = normaliserMatriculeScan(decoded);
@@ -391,18 +407,54 @@ export default function PointageQR() {
                     <option value="RETARD">Retard</option>
                   </select>
                 </div>
-                <div className="sm:col-span-2 lg:col-span-5">
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-500 uppercase">Employé</label>
+                  <select value={filters.employeId} onChange={e => setFilters({ ...filters, employeId: e.target.value })}
+                    className={`w-full mt-1 ${FILTER_SELECT_CLASS}`}>
+                    <option value="">Tous</option>
+                    {employesList.map(emp => (
+                      <option key={emp.id} value={String(emp.id)}>{emp.prenom} {emp.nom} ({emp.matricule})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:col-span-2 lg:col-span-5 flex flex-wrap gap-3 items-center">
                   <button onClick={refreshPresences} className="flex items-center gap-2 px-4 py-2 bg-[#1e3a5f] text-white rounded-xl text-sm font-semibold">
                     <Filter size={14} /> Appliquer les filtres
                   </button>
+                  <TableExportButtons
+                    columns={PRESENCE_EXPORT_COLUMNS}
+                    rows={displayedPresences}
+                    basename={`presences-${presenceTab}`}
+                    title="Historique des présences"
+                  />
                 </div>
               </div>
             )}
 
-            <div className="flex items-center justify-end">
-              <span className="text-xs bg-black/5 px-2.5 py-1 rounded-full font-semibold text-gray-600">
-                {displayedPresences.length} pointage{displayedPresences.length !== 1 ? 's' : ''}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-3 items-center">
+                <select
+                  value={filters.employeId}
+                  onChange={e => setFilters({ ...filters, employeId: e.target.value })}
+                  className={FILTER_SELECT_CLASS}
+                >
+                  <option value="">Tous les employés</option>
+                  {employesList.map(emp => (
+                    <option key={emp.id} value={String(emp.id)}>{emp.prenom} {emp.nom} ({emp.matricule})</option>
+                  ))}
+                </select>
+                <span className="text-xs bg-black/5 px-2.5 py-1 rounded-full font-semibold text-gray-600">
+                  {displayedPresences.length} pointage{displayedPresences.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              {presenceTab !== 'recherche' && (
+                <TableExportButtons
+                  columns={PRESENCE_EXPORT_COLUMNS}
+                  rows={displayedPresences}
+                  basename={`presences-${presenceTab}`}
+                  title="Historique des présences"
+                />
+              )}
             </div>
 
             {loadingPresences ? (

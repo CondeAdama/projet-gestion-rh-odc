@@ -5,7 +5,8 @@ import { getApiError } from '../utils/validation';
 import { useAuth } from '../context/AuthContext';
 import { useDialog } from '../context/DialogContext';
 import { Modal } from '../components/ui/Modal';
-import { InputField, SelectField } from '../components/ui/FormFields';
+import { InputField, SelectField, SearchBar } from '../components/ui/FormFields';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
 
 function ReferentielTab({ type, label, fields, departements = [] }) {
   const [items, setItems] = useState([]);
@@ -15,6 +16,7 @@ function ReferentielTab({ type, label, fields, departements = [] }) {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
   const { hasPermission } = useAuth();
   const { confirm } = useDialog();
 
@@ -119,12 +121,37 @@ function ReferentielTab({ type, label, fields, departements = [] }) {
   };
 
   const liste = subTab === 'actifs' ? items : corbeille;
+  const filtered = liste.filter(item => {
+    const q = search.toLowerCase();
+    if (!q) return true;
+    return item.code?.toLowerCase().includes(q) ||
+      item.libelle?.toLowerCase().includes(q) ||
+      item.nom?.toLowerCase().includes(q) ||
+      item.description?.toLowerCase().includes(q) ||
+      item.ville?.toLowerCase().includes(q);
+  });
+  const exportColumns = fields.map(f => ({
+    header: f.label,
+    accessor: row => {
+      if (f.key === 'departementId') return row.departementLibelle || row.departementId || '';
+      return row[f.key] ?? row.libelle ?? row.nom ?? '';
+    },
+  }));
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h3 className="font-semibold">{label}</h3>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="w-full sm:w-48">
+            <SearchBar value={search} onChange={e => setSearch(e.target.value)} placeholder="Filtrer..." />
+          </div>
+          <TableExportButtons
+            columns={exportColumns}
+            rows={filtered}
+            basename={`referentiel-${type}-${subTab}`}
+            title={label}
+          />
           <button onClick={() => setSubTab('actifs')} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${subTab === 'actifs' ? 'bg-black text-white' : 'bg-gray-100'}`}>
             Actifs ({items.length})
           </button>
@@ -158,7 +185,7 @@ function ReferentielTab({ type, label, fields, departements = [] }) {
       )}
 
       <div className="space-y-2">
-        {liste.map(item => (
+        {filtered.map(item => (
           <div key={item.id} className="flex items-center justify-between p-3 glass-card">
             <div>
               <span className="font-medium text-sm">{item.libelle || item.nom}</span>
@@ -179,7 +206,7 @@ function ReferentielTab({ type, label, fields, departements = [] }) {
             </div>
           </div>
         ))}
-        {liste.length === 0 && <p className="text-sm text-gray-400 text-center py-6">{subTab === 'corbeille' ? 'Corbeille vide' : 'Aucun élément'}</p>}
+        {filtered.length === 0 && <p className="text-sm text-gray-400 text-center py-6">{subTab === 'corbeille' ? 'Corbeille vide' : 'Aucun élément'}</p>}
       </div>
 
       <Modal open={!!editItem} onClose={() => { setEditItem(null); setForm({}); }} title={`Modifier — ${editItem?.libelle || editItem?.nom}`}>

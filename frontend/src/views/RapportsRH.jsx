@@ -6,6 +6,7 @@ import {
 import api from '../services/api';
 import { useConfig } from '../context/ConfigContext';
 import { PageHeader, StatCard, LogoImage } from '../components/ui/Display';
+import { TableExportButtons } from '../components/ui/TableExportButtons';
 import { formatGNF, MOIS_LABELS } from '../utils/format';
 
 export default function RapportsRH() {
@@ -42,15 +43,50 @@ export default function RapportsRH() {
   const paie = rapport?.paie || {};
   const vis = rapport?.visites || {};
 
+  const rapportExportRows = [
+    { section: 'Effectifs', indicateur: 'Total collaborateurs', valeur: emp.total ?? 0 },
+    { section: 'Effectifs', indicateur: 'Actifs', valeur: emp.actifs ?? 0 },
+    { section: 'Effectifs', indicateur: 'Suspendus', valeur: emp.suspendus ?? 0 },
+    { section: 'Effectifs', indicateur: 'Licenciés', valeur: emp.licencies ?? 0 },
+    { section: 'Congés', indicateur: 'En attente', valeur: cong.enAttente ?? 0 },
+    { section: 'Congés', indicateur: 'Approuvés', valeur: cong.approuves ?? 0 },
+    { section: 'Congés', indicateur: 'Refusés', valeur: cong.refuses ?? 0 },
+    { section: 'Présences du jour', indicateur: 'Passages', valeur: pres.total ?? pres.aujourdhui ?? 0 },
+    { section: 'Présences du jour', indicateur: 'Employés pointés', valeur: pres.employes ?? 0 },
+    { section: 'Présences du jour', indicateur: 'En règle', valeur: pres.enRegle ?? 0 },
+    { section: 'Présences du jour', indicateur: 'Retards', valeur: pres.retards ?? 0 },
+    { section: 'Présences du jour', indicateur: 'Sur site', valeur: pres.presents ?? 0 },
+    { section: 'Visites', indicateur: 'En cours', valeur: vis.enCours ?? 0 },
+    { section: 'Visites', indicateur: 'Terminées', valeur: vis.terminees ?? 0 },
+    { section: 'Paie', indicateur: 'Bulletins générés', valeur: paie.totalFiches ?? 0 },
+    { section: 'Paie', indicateur: 'Masse salariale nette', valeur: formatGNF(paie.masseSalariale) },
+    { section: 'Paie', indicateur: `CNSS (${paie.tauxCnss ?? 5}%)`, valeur: formatGNF(paie.totalCnss) },
+    { section: 'Paie', indicateur: `RTS (${paie.tauxRts ?? 10}%)`, valeur: formatGNF(paie.totalRts) },
+  ];
+
+  const rapportExportColumns = [
+    { header: 'Section', key: 'section' },
+    { header: 'Indicateur', key: 'indicateur' },
+    { header: 'Valeur', key: 'valeur' },
+  ];
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Rapports RH"
         subtitle={`Synthèse globale — ${mois} ${now.getFullYear()}`}
         action={
-          <button onClick={fetchData} className="p-3 bg-white/60 border rounded-xl">
-            <RefreshCw size={18} className="text-gray-600" />
-          </button>
+          <div className="flex gap-2 items-center">
+            <TableExportButtons
+              columns={rapportExportColumns}
+              rows={rapportExportRows}
+              basename="rapport-rh-synthese"
+              title={`Rapport RH — ${mois} ${now.getFullYear()}`}
+            />
+            <button onClick={fetchData} className="p-3 bg-white/60 border rounded-xl">
+              <RefreshCw size={18} className="text-gray-600" />
+            </button>
+          </div>
         }
       />
 
